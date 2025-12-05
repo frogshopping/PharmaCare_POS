@@ -1,6 +1,5 @@
-import './globals.css'
-import Sidebar from '../components/Sidebar'
-import Topbar from '../components/Topbar'
+import './main.css'
+
 
 export const metadata = {
   title: 'pharma_care',
@@ -12,11 +11,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <div className="app-layout">
-          <Sidebar />
-          <div className="content-area">
-            <Topbar />
-            <main className="main-content">{children}</main>
-          </div>
+          {children}
         </div>
       </body>
     </html>
