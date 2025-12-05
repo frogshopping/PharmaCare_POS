@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { TrendingUp, TrendingDown, DollarSign, Leaf, Package, Clock, Calendar } from 'lucide-react';
+import { Card } from '@/components/ui/Card';
 
 interface DashboardStatCardProps {
     title: string;
@@ -12,10 +13,10 @@ interface DashboardStatCardProps {
     iconType?: 'revenue' | 'profit' | 'products' | 'stock' | 'expiring' | 'payments';
 }
 
-const DashboardStatCard: React.FC<DashboardStatCardProps> = ({ 
-    title, 
-    value, 
-    trend, 
+const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
+    title,
+    value,
+    trend,
     trendDirection = 'up',
     subtitle,
     iconType
@@ -57,7 +58,7 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
     };
 
     return (
-        <div className="bg-white p-6 rounded-lg shadow-sm">
+        <Card className="p-6">
             <div className="flex items-start justify-between mb-3">
                 <h3 className="text-sm font-medium text-gray-600">{title}</h3>
                 {getIcon()}
@@ -82,7 +83,7 @@ const DashboardStatCard: React.FC<DashboardStatCardProps> = ({
                     {subtitle}
                 </p>
             )}
-        </div>
+        </Card>
     );
 };
 

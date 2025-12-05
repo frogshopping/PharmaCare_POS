@@ -7,9 +7,11 @@ import MedicineFilters from '@/components/catalog/MedicineFilters';
 import MedicineTable from '@/components/catalog/MedicineTable';
 import Pagination from '@/components/catalog/Pagination';
 import { Medicine, getMedicines } from '@/services/api';
+import { AddProductModal } from '@/components/inventory/AddProductModal';
 
 export default function InventoryPage() {
     const [medicines, setMedicines] = useState<Medicine[]>([]);
+    const [isAddProductOpen, setIsAddProductOpen] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
@@ -64,27 +66,27 @@ export default function InventoryPage() {
 
         // Apply search filters
         if (searchFilters.medicineName) {
-            filtered = filtered.filter(m => 
+            filtered = filtered.filter(m =>
                 m.name.toLowerCase().includes(searchFilters.medicineName.toLowerCase())
             );
         }
         if (searchFilters.barcode) {
-            filtered = filtered.filter(m => 
+            filtered = filtered.filter(m =>
                 m.barcode.toLowerCase().includes(searchFilters.barcode.toLowerCase())
             );
         }
         if (searchFilters.strength) {
-            filtered = filtered.filter(m => 
+            filtered = filtered.filter(m =>
                 m.strength.toLowerCase().includes(searchFilters.strength.toLowerCase())
             );
         }
         if (searchFilters.manufacturer) {
-            filtered = filtered.filter(m => 
+            filtered = filtered.filter(m =>
                 m.manufacture.toLowerCase().includes(searchFilters.manufacturer.toLowerCase())
             );
         }
         if (searchFilters.genericName) {
-            filtered = filtered.filter(m => 
+            filtered = filtered.filter(m =>
                 m.genericName.toLowerCase().includes(searchFilters.genericName.toLowerCase())
             );
         }
@@ -117,13 +119,13 @@ export default function InventoryPage() {
 
     return (
         <DashboardLayout>
-            <div className="flex-1 overflow-y-auto bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+            <div className="flex-1 overflow-y-auto bg-slate-50 custom-scrollbar">
                 <div className="p-6">
-                    <MedicineHeader 
+                    <MedicineHeader
                         totalCount={filteredMedicines.length}
-                        onAddItem={() => console.log('Add item clicked')}
+                        onAddItem={() => setIsAddProductOpen(true)}
                     />
-                    <MedicineFilters 
+                    <MedicineFilters
                         totalCount={filteredMedicines.length}
                         activeFilter={activeFilter}
                         onFilterChange={handleFilterChange}
@@ -146,7 +148,7 @@ export default function InventoryPage() {
                         </div>
                     ) : (
                         <>
-                            <MedicineTable 
+                            <MedicineTable
                                 medicines={paginatedMedicines}
                                 onRetail={(medicine) => {
                                     console.log('Retail:', medicine);
@@ -180,6 +182,15 @@ export default function InventoryPage() {
                     )}
                 </div>
             </div>
+
+            <AddProductModal
+                isOpen={isAddProductOpen}
+                onClose={() => setIsAddProductOpen(false)}
+                onSuccess={() => {
+                    console.log('Product Added');
+                    // In real app, reload medicines here
+                }}
+            />
         </DashboardLayout>
     );
 }

@@ -87,16 +87,10 @@ type SectionId =
   | "purchase"
   | "inventory"
   | "profitability"
-  | "sales"
   | "customers"
   | "finance";
 
 const sectionMockMetrics: Record<SectionId, { label: string; value: string }[]> = {
-  legal: [
-    { label: "Controlled drug items", value: "38" },
-    { label: "Last compliance audit", value: "2025-11-20" },
-    { label: "Pending approvals", value: "3" },
-  ],
   purchase: [
     { label: "Active suppliers", value: "12" },
     { label: "Open purchase orders", value: "6" },
@@ -112,11 +106,6 @@ const sectionMockMetrics: Record<SectionId, { label: string; value: string }[]> 
     { label: "Top profitable category", value: "Chronic Care" },
     { label: "Loss-making SKUs", value: "5" },
   ],
-  sales: [
-    { label: "Average daily sales", value: "$4,820" },
-    { label: "Peak hour", value: "6 PM - 8 PM" },
-    { label: "Walk-in vs. online", value: "72% / 28%" },
-  ],
   customers: [],
   finance: [
     { label: "Outstanding receivables", value: "$18,900" },
@@ -131,11 +120,8 @@ const sectionConfigs: {
   icon: React.ComponentType<{ className?: string }>;
   accent: string;
 }[] = [
-  { id: "legal", title: "Legal & Controlled Drugs", icon: ShieldAlert, accent: "bg-rose-500" },
   { id: "purchase", title: "Purchase & Suppliers", icon: FileText, accent: "bg-sky-500" },
-  { id: "inventory", title: "Inventory Health", icon: BarChart3, accent: "bg-violet-500" },
   { id: "profitability", title: "Profitability", icon: DollarSign, accent: "bg-emerald-500" },
-  { id: "sales", title: "Sales Deep-Dive", icon: ShoppingCart, accent: "bg-cyan-500" },
   { id: "customers", title: "Customer & Prescriptions", icon: Users, accent: "bg-indigo-500" },
   { id: "finance", title: "Finance & Cash Summary", icon: DollarSign, accent: "bg-slate-500" },
 ];

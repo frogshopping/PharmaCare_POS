@@ -13,10 +13,16 @@ import SlowMovingItemsCard from '@/components/dashboard/SlowMovingItemsCard'
 import RecentSalesTable from '@/components/dashboard/RecentSalesTable'
 import PurchaseOrdersTable from '@/components/dashboard/PurchaseOrdersTable'
 import { getMockDashboardData, DashboardData } from '@/services/mockDashboardData'
+import { POSModal } from '@/components/pos/POSModal'
+import { AddProductModal } from '@/components/inventory/AddProductModal'
+import { AddCustomerModal } from '@/components/customers/AddCustomerModal'
 
 export default function Home() {
     const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isPOSOpen, setIsPOSOpen] = useState(false);
+    const [isAddProductOpen, setIsAddProductOpen] = useState(false);
+    const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
 
     useEffect(() => {
         // TODO: Replace with actual API call when backend is ready
@@ -181,12 +187,24 @@ export default function Home() {
                 {/* Right Sidebar */}
                 <RightSidebar
                     notifications={dashboardData.notifications}
-                    onNewSale={() => console.log('New Sale clicked')}
-                    onAddProduct={() => console.log('Add Product clicked')}
-                    onNewCustomer={() => console.log('New Customer clicked')}
+                    onNewSale={() => setIsPOSOpen(true)}
+                    onAddProduct={() => setIsAddProductOpen(true)}
+                    onNewCustomer={() => setIsAddCustomerOpen(true)}
                     onGenerateReport={() => console.log('Generate Report clicked')}
                 />
             </div>
+
+            <POSModal isOpen={isPOSOpen} onClose={() => setIsPOSOpen(false)} />
+            <AddProductModal
+                isOpen={isAddProductOpen}
+                onClose={() => setIsAddProductOpen(false)}
+                onSuccess={() => console.log('Product Added')}
+            />
+            <AddCustomerModal
+                isOpen={isAddCustomerOpen}
+                onClose={() => setIsAddCustomerOpen(false)}
+                onSuccess={() => console.log('Customer Added')}
+            />
         </DashboardLayout>
     );
 }
