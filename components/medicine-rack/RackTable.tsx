@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { DummyRackCategory, DummyMedicine } from '@/services/rackDummyData';
-import { FileText, Printer, FileSpreadsheet } from 'lucide-react';
+import { FileText, Printer, FileSpreadsheet, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import MedicineDetailsModal from './MedicineDetailsModal';
 
@@ -15,57 +15,69 @@ const RackTable: React.FC<RackTableProps> = ({ data }) => {
 
     return (
         <>
-            <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-                {/* Table Toolbar */}
-                <div className="p-4 border-b border-slate-200 flex gap-2">
-                    <Button variant="outline" size="sm" className="gap-2 text-slate-600">
-                        <FileSpreadsheet size={16} />
-                        CSV
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
+                {/* Table Toolbar - Minimal */}
+                {/* <div className="px-6 py-4 border-b border-slate-100 flex gap-2 justify-end opacity-0 hover:opacity-100 transition-opacity">
+                    <Button variant="ghost" size="sm" className="h-8 gap-2 text-slate-500 hover:text-slate-800">
+                        <FileSpreadsheet size={14} /> CSV
                     </Button>
-                    <Button variant="outline" size="sm" className="gap-2 text-slate-600">
-                        <FileText size={16} />
-                        Excel
+                    <Button variant="ghost" size="sm" className="h-8 gap-2 text-slate-500 hover:text-slate-800">
+                        <FileText size={14} /> Excel
                     </Button>
-                    <Button variant="outline" size="sm" className="gap-2 text-slate-600">
-                        <Printer size={16} />
-                        Print
+                    <Button variant="ghost" size="sm" className="h-8 gap-2 text-slate-500 hover:text-slate-800">
+                        <Printer size={14} /> Print
                     </Button>
-                </div>
+                </div> */}
 
                 {/* Table */}
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                        <thead className="bg-slate-50 border-b border-slate-200">
+                        <thead className="bg-slate-50/50 border-b border-slate-100">
                             <tr>
-                                <th className="px-6 py-4 font-semibold text-slate-600 w-16">#</th>
-                                <th className="px-6 py-4 font-semibold text-slate-600 w-48 border-r border-slate-200">Rack Title</th>
-                                <th className="px-6 py-4 font-semibold text-slate-600">Medicine</th>
+                                <th className="px-8 py-5 font-semibold text-slate-500 uppercase tracking-wider text-xs w-20"># ID</th>
+                                <th className="px-8 py-5 font-semibold text-slate-500 uppercase tracking-wider text-xs w-64">Rack Title</th>
+                                <th className="px-8 py-5 font-semibold text-slate-500 uppercase tracking-wider text-xs">Medicines</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-200">
+                        <tbody className="divide-y divide-slate-50">
                             {data.map((category) => (
-                                <tr key={category.id} className="hover:bg-slate-50/50 transition-colors">
-                                    <td className="px-6 py-6 align-top text-slate-500 font-medium">
-                                        {category.id}
+                                <tr key={category.id} className="hover:bg-slate-50/80 transition-colors group">
+                                    <td className="px-8 py-6 align-top">
+                                        <span className="font-mono text-slate-400 text-xs bg-slate-100 px-2 py-1 rounded">
+                                            {category.id}
+                                        </span>
                                     </td>
-                                    <td className="px-6 py-6 align-top font-medium text-slate-800 border-r border-slate-200">
-                                        {category.title}
+                                    <td className="px-8 py-6 align-top">
+                                        <div className="font-bold text-slate-700 text-lg mb-1">{category.title}</div>
+                                        <div className="text-xs text-slate-400 font-medium">
+                                            {category.medicines.length} Items Stored
+                                        </div>
                                     </td>
-                                    <td className="px-6 py-6">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-2">
+                                    <td className="px-8 py-6">
+                                        <div className="flex flex-wrap gap-2">
                                             {category.medicines.map((medicine, index) => (
-                                                <div
+                                                <button
                                                     key={index}
                                                     onClick={() => setSelectedMedicine(medicine)}
-                                                    className="flex items-start text-xs leading-relaxed text-slate-600 cursor-pointer hover:bg-blue-50 p-1 rounded -ml-1 transition-colors"
+                                                    className="
+                                                        group/chip flex flex-col items-start gap-0.5 
+                                                        bg-white hover:bg-white hover:shadow-md hover:-translate-y-0.5 hover:border-blue-200
+                                                        border border-slate-200 rounded-lg p-2.5 
+                                                        transition-all duration-200 text-left min-w-[140px]
+                                                    "
                                                 >
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-1.5 mr-2 shrink-0"></div>
-                                                    <span>
-                                                        <span className="font-semibold text-slate-700 hover:text-blue-600 transition-colors">{medicine.name}</span>
-                                                        <span className="text-slate-500 mx-1">({medicine.strength})</span>
-                                                        <span className="text-slate-400">- {medicine.manufacturer}</span>
-                                                    </span>
-                                                </div>
+                                                    <div className="font-semibold text-slate-700 group-hover/chip:text-blue-600 text-sm">
+                                                        {medicine.name}
+                                                    </div>
+                                                    <div className="flex items-center gap-2 w-full">
+                                                        <span className="text-[10px] uppercase font-bold text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded">
+                                                            {medicine.strength}
+                                                        </span>
+                                                        <span className="text-[10px] text-slate-400 truncate flex-1">
+                                                            {medicine.manufacturer}
+                                                        </span>
+                                                    </div>
+                                                </button>
                                             ))}
                                         </div>
                                     </td>
@@ -76,8 +88,12 @@ const RackTable: React.FC<RackTableProps> = ({ data }) => {
                 </div>
 
                 {data.length === 0 && (
-                    <div className="p-8 text-center text-slate-500">
-                        No data available in table
+                    <div className="p-12 text-center">
+                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <FileText className="text-slate-300" size={32} />
+                        </div>
+                        <p className="text-slate-500 font-medium">No results found</p>
+                        <p className="text-slate-400 text-sm mt-1">Try adjusting your search terms</p>
                     </div>
                 )}
             </div>
