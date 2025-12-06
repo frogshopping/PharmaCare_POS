@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Medicine } from '@/services/mockMedicineData';
+import { Medicine } from '@/services/api';
 
 interface MedicineListProps {
     medicines: Medicine[];
@@ -16,7 +16,7 @@ const MedicineList: React.FC<MedicineListProps> = ({ medicines }) => {
                         <div className="flex justify-between items-start">
                             <div>
                                 <h4 className="font-semibold text-slate-800 text-sm">{medicine.name}</h4>
-                                <p className="text-xs text-slate-500 mt-0.5">{medicine.manufacturer}</p>
+                                <p className="text-xs text-slate-500 mt-0.5">{medicine.manufacture}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3 mt-2 text-xs">
@@ -24,8 +24,8 @@ const MedicineList: React.FC<MedicineListProps> = ({ medicines }) => {
                                 ${medicine.price.toFixed(2)}
                             </span>
                             <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-                            <span className={`${medicine.stock < 50 ? 'text-orange-500 font-medium' : 'text-emerald-600'}`}>
-                                {medicine.stock} in stock
+                            <span className={`${medicine.inStock < 50 ? 'text-orange-500 font-medium' : 'text-emerald-600'}`}>
+                                {medicine.inStock} in stock
                             </span>
                         </div>
                     </div>

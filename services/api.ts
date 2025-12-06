@@ -38,6 +38,14 @@ export interface Medicine {
   totalSold: number;
   inStock: number;
   stockStatus: 'Low Stock' | 'Stock Alert' | 'Normal';
+  category?: string;
+  expiryDate?: string;
+}
+
+export interface CategoryGroup {
+  category: string;
+  medicines: Medicine[];
+  count: number;
 }
 
 export interface Category {
@@ -300,23 +308,35 @@ export const mockMedicines: Medicine[] = [
     stockStatus: 'Normal'
   },
   // Add more medicines to reach 56 total
-  ...Array.from({ length: 46 }, (_, i) => ({
-    id: `med-${i + 11}`,
-    srlNo: i + 11,
-    name: `Medicine ${i + 11}`,
-    barcode: `SKU${i + 11}`,
-    productCode: String(i + 11).padStart(5, '0'),
-    strength: `${(i % 5) * 50 + 100}mg`,
-    manufacture: ['Global Pharma', 'PharmaSource', 'HealthPlus Ltd', 'MedSupply Co', 'LifeCare Distributors'][i % 5],
-    genericName: ['Antibiotic', 'Pain Relief', 'Antacid', 'Allergy', 'Diabetes Care'][i % 5],
-    price: Math.round((Math.random() * 30 + 5) * 100) / 100,
-    vat: 0.00,
-    rackNo: '---',
-    totalPurchase: 0,
-    totalSold: 0,
-    inStock: Math.floor(Math.random() * 200),
-    stockStatus: 'Normal' as const
-  }))
+  ...Array.from({ length: 46 }, (_, i) => {
+    const categories = ['Allergy', 'Antibiotic', 'Pain Relief', 'Antacid', 'Diabetes Care', 'Vitamins', 'Skin Care'];
+    const manufacturers = ['Global Pharma', 'PharmaSource', 'HealthPlus Ltd', 'MedSupply Co', 'LifeCare Distributors'];
+    const generics = ['Cetirizine', 'Amoxicillin', 'Ibuprofen', 'Omeprazole', 'Metformin', 'Multivitamin', 'Hydrocortisone'];
+
+    // Generate random future date
+    const date = new Date();
+    date.setDate(date.getDate() + Math.random() * 365);
+
+    return {
+      id: `med-${i + 11}`,
+      srlNo: i + 11,
+      name: `Medicine ${i + 11}`,
+      barcode: `SKU${i + 11}`,
+      productCode: String(i + 11).padStart(5, '0'),
+      strength: `${(i % 5) * 50 + 100}mg`,
+      manufacture: manufacturers[i % manufacturers.length],
+      genericName: generics[i % generics.length],
+      price: Math.round((Math.random() * 30 + 5) * 100) / 100,
+      vat: 0.00,
+      rackNo: `R-${Math.floor(Math.random() * 10)}`,
+      totalPurchase: 0,
+      totalSold: 0,
+      inStock: Math.floor(Math.random() * 200),
+      stockStatus: 'Normal' as const,
+      category: categories[i % categories.length],
+      expiryDate: date.toISOString().split('T')[0]
+    };
+  })
 ];
 
 export const mockCategories: Category[] = [
@@ -388,13 +408,57 @@ export const getFollowers = async (): Promise<Follower[]> => {
   });
 };
 
+// ... (interfaces remain the same)
+
+const API_BASE_URL = 'http://localhost:5000/api';
+
 export const getMedicines = async (): Promise<Medicine[]> => {
-  // Simulate API call
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(mockMedicines), 500);
-  });
+  const response = await fetch(`${API_BASE_URL}/inventory/medicines`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch medicines');
+  }
+  return await response.json();
 };
 
+export const createMedicine = async (medicine: Partial<Medicine>): Promise<Medicine> => {
+  const response = await fetch(`${API_BASE_URL}/inventory/medicines`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(medicine),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to create medicine');
+  }
+  return await response.json();
+};
+
+export const updateMedicine = async (id: string, medicine: Partial<Medicine>): Promise<Medicine> => {
+  const response = await fetch(`${API_BASE_URL}/inventory/medicines/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(medicine),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to update medicine');
+  }
+  return await response.json();
+};
+
+export const deleteMedicine = async (id: string): Promise<void> => {
+  const response = await fetch(`${API_BASE_URL}/inventory/medicines/${id}`, {
+    method: 'DELETE',
+  });
+  if (!response.ok) {
+    throw new Error('Failed to delete medicine');
+  }
+  // The API returns a success message JSON, but we just need to know it succeeded
+};
+
+// Keep other mock getters for now as user only provided endpoints for medicines
 export const getCategories = async (): Promise<Category[]> => {
   return new Promise((resolve) => {
     setTimeout(() => resolve(mockCategories), 500);
@@ -430,3 +494,58 @@ export const getPackages = async (): Promise<Package[]> => {
     setTimeout(() => resolve(mockPackages), 500);
   });
 };
+
+export interface Rack {
+  id: number;
+  name: string;
+}
+
+export interface GenericName {
+  id: number;
+  name: string;
+}
+
+export const mockRacks: Rack[] = [
+  { id: 1, name: 'Rack A1' },
+  { id: 2, name: 'Rack A2' },
+  { id: 3, name: 'Fridge 1' },
+  { id: 4, name: 'Shelf B-Top' },
+];
+
+export const mockGenerics: GenericName[] = [
+  { id: 1, name: 'Paracetamol' },
+  { id: 2, name: 'Azithromycin' },
+  { id: 3, name: 'Ibuprofen' },
+  { id: 4, name: 'Omeprazole' },
+  { id: 5, name: 'Amoxicillin' },
+];
+
+export const getRacks = async (): Promise<Rack[]> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/inventory/racks`);
+    if (!response.ok) {
+      // If endpoint not ready, fallback to mock data or empty
+      console.warn('Failed to fetch racks from API, falling back to mock');
+      return mockRacks;
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching racks:', error);
+    return mockRacks;
+  }
+};
+
+export const getGenerics = async (): Promise<GenericName[]> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/inventory/generics`);
+    if (!response.ok) {
+      console.warn('Failed to fetch generics from API, falling back to mock');
+      return mockGenerics;
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching generics:', error);
+    return mockGenerics;
+  }
+};
+

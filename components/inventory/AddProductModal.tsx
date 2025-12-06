@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/Input"
 import { Button } from "@/components/ui/Button"
 import { CreatableSelect } from "@/components/ui/CreatableSelect"
 import { Plus, Package, Save, AlertCircle } from "lucide-react"
-import { getRacks, getGenerics, Rack, GenericName } from "@/services/mockInventoryData"
+import { getRacks, getGenerics, Rack, GenericName, createMedicine } from "@/services/api"
 
 interface AddProductModalProps {
     isOpen: boolean
@@ -16,6 +16,7 @@ interface AddProductModalProps {
 
 export function AddProductModal({ isOpen, onClose, onSuccess }: AddProductModalProps) {
     const [loading, setLoading] = React.useState(false)
+    const [isSubmitting, setIsSubmitting] = React.useState(false)
     const [racks, setRacks] = React.useState<Rack[]>([])
     const [generics, setGenerics] = React.useState<GenericName[]>([])
 
@@ -24,23 +25,14 @@ export function AddProductModal({ isOpen, onClose, onSuccess }: AddProductModalP
         productName: "",
         description: "",
         power: "",
-        generic: "", // Name for simplicity in display, mapped to ID in submission
-        rack: "",    // Name for simplicity
+        generic: "",
+        manufacture: "",
+        rack: "",
         stock: 0,
         price: 0
     })
 
-    React.useEffect(() => {
-        if (isOpen) {
-            setLoading(true)
-            Promise.all([getRacks(), getGenerics()])
-                .then(([racksData, genericsData]) => {
-                    setRacks(racksData)
-                    setGenerics(genericsData)
-                })
-                .finally(() => setLoading(false))
-        }
-    }, [isOpen])
+    // ... useEffect for racks/generics
 
     const handleChange = (field: string, value: any) => {
         setFormData(prev => ({ ...prev, [field]: value }))
@@ -48,32 +40,56 @@ export function AddProductModal({ isOpen, onClose, onSuccess }: AddProductModalP
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        // Simulate API submission
-        console.log("Submitting Product:", formData)
 
-        // Validate
         if (!formData.productName || !formData.price) {
-            alert("Please fill in required fields")
+            alert("Please fill in required fields: Product Name and Price")
             return
         }
 
-        // In a real app, post to API here
-        // await createProduct(formData)
+        setIsSubmitting(true)
 
-        onSuccess()
-        onClose()
+        try {
+            await createMedicine({
+                name: formData.productName,
+                description: formData.description,
+                strength: formData.power,
+                genericName: formData.generic,
+                manufacture: formData.manufacture || "Unknown", // Handle missing field
+                rackNo: formData.rack,
+                inStock: formData.stock,
+                price: formData.price,
+                // Default values for required fields not in form
+                srlNo: 0,
+                barcode: "N/A",
+                productCode: "N/A",
+                totalPurchase: 0,
+                totalSold: 0,
+                stockStatus: formData.stock > 0 ? 'Normal' : 'Stock Alert'
 
-        // Reset form
-        setFormData({
-            productName: "",
-            description: "",
-            power: "",
-            generic: "",
-            rack: "",
-            stock: 0,
-            price: 0
-        })
+            })
+
+            onSuccess()
+            onClose()
+
+            // Reset form
+            setFormData({
+                productName: "",
+                description: "",
+                power: "",
+                generic: "",
+                manufacture: "",
+                rack: "",
+                stock: 0,
+                price: 0
+            })
+        } catch (error) {
+            console.error("Failed to create product:", error)
+            alert("Failed to create product. Please try again.")
+        } finally {
+            setIsSubmitting(false)
+        }
     }
+
 
     const handleCreateRack = (name: string) => {
         const newRack = { id: Date.now(), name }
@@ -109,6 +125,15 @@ export function AddProductModal({ isOpen, onClose, onSuccess }: AddProductModalP
                                 value={formData.productName}
                                 onChange={e => handleChange('productName', e.target.value)}
                                 required
+                            />
+                        </div>
+
+                        <div className="col-span-2">
+                            <label className="text-sm font-medium text-slate-700 mb-1.5 block">Manufacturer</label>
+                            <Input
+                                placeholder="e.g. Square Pharmaceuticals"
+                                value={formData.manufacture}
+                                onChange={e => handleChange('manufacture', e.target.value)}
                             />
                         </div>
 
@@ -189,12 +214,16 @@ export function AddProductModal({ isOpen, onClose, onSuccess }: AddProductModalP
                     </div>
 
                     <div className="flex justify-end gap-3 pt-2">
-                        <Button type="button" variant="ghost" onClick={onClose}>
+                        <Button type="button" variant="ghost" onClick={onClose} disabled={isSubmitting}>
                             Cancel
                         </Button>
-                        <Button type="submit" className="gap-2 shadow-lg shadow-blue-600/20">
-                            <Save size={18} />
-                            Save Product
+                        <Button type="submit" className="gap-2 shadow-lg shadow-blue-600/20" disabled={isSubmitting}>
+                            {isSubmitting ? (
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            ) : (
+                                <Save size={18} />
+                            )}
+                            {isSubmitting ? 'Saving...' : 'Save Product'}
                         </Button>
                     </div>
                 </form>

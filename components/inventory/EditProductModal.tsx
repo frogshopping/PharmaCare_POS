@@ -6,18 +6,20 @@ import { Input } from "@/components/ui/Input"
 import { Button } from "@/components/ui/Button"
 import { CreatableSelect } from "@/components/ui/CreatableSelect"
 import { Package, Save, AlertCircle } from "lucide-react"
-import { getRacks, getGenerics, Rack, GenericName } from "@/services/mockInventoryData"
-import { Medicine } from "@/services/api"
+// ... imports
+import { getRacks, getGenerics, Rack, GenericName, Medicine, updateMedicine } from "@/services/api"
 
+// ... types
 interface EditProductModalProps {
     isOpen: boolean
     onClose: () => void
-    onSuccess: (updatedProduct: Partial<Medicine> & { id: string | number }) => void
+    onSuccess: (updatedProduct: Partial<Medicine> & { id: string }) => void // Ensure id is string as per Medicine type
     product: Medicine | null
 }
 
 export function EditProductModal({ isOpen, onClose, onSuccess, product }: EditProductModalProps) {
     const [loading, setLoading] = React.useState(false)
+    const [isSubmitting, setIsSubmitting] = React.useState(false)
     const [racks, setRacks] = React.useState<Rack[]>([])
     const [generics, setGenerics] = React.useState<GenericName[]>([])
 
@@ -27,22 +29,13 @@ export function EditProductModal({ isOpen, onClose, onSuccess, product }: EditPr
         description: "",
         power: "",
         generic: "",
+        manufacture: "",
         rack: "",
         stock: 0,
         price: 0
     })
 
-    React.useEffect(() => {
-        if (isOpen) {
-            setLoading(true)
-            Promise.all([getRacks(), getGenerics()])
-                .then(([racksData, genericsData]) => {
-                    setRacks(racksData)
-                    setGenerics(genericsData)
-                })
-                .finally(() => setLoading(false))
-        }
-    }, [isOpen])
+    // ... useEffects
 
     React.useEffect(() => {
         if (product && isOpen) {
@@ -51,7 +44,8 @@ export function EditProductModal({ isOpen, onClose, onSuccess, product }: EditPr
                 description: product.description || "",
                 power: product.strength || "",
                 generic: product.genericName,
-                rack: "", // In a real scenario, this would come from the product object
+                manufacture: product.manufacture,
+                rack: product.rackNo,
                 stock: product.inStock,
                 price: product.price
             })
@@ -65,26 +59,42 @@ export function EditProductModal({ isOpen, onClose, onSuccess, product }: EditPr
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
 
-        // Validate
-        if (!formData.productName || !formData.price) {
+        if (!formData.productName || !formData.price || !product) {
             alert("Please fill in required fields")
             return
         }
 
-        // Return updated data
-        onSuccess({
-            id: product?.id || 0,
-            name: formData.productName,
-            description: formData.description,
-            strength: formData.power,
-            genericName: formData.generic,
-            // rack: formData.rack, // handle rack logic
-            inStock: formData.stock,
-            price: formData.price
-        })
+        setIsSubmitting(true)
 
-        onClose()
+        try {
+            const updatedData = {
+                name: formData.productName,
+                description: formData.description,
+                strength: formData.power,
+                genericName: formData.generic,
+                manufacture: formData.manufacture,
+                rackNo: formData.rack,
+                inStock: formData.stock,
+                price: formData.price
+            }
+
+            await updateMedicine(product.id, updatedData)
+
+            // Return updated data to parent for optimistic update or refresh
+            onSuccess({
+                id: product.id,
+                ...updatedData
+            })
+
+            onClose()
+        } catch (error) {
+            console.error("Failed to update product:", error)
+            alert("Failed to update product. Please try again.")
+        } finally {
+            setIsSubmitting(false)
+        }
     }
+
 
     const handleCreateRack = (name: string) => {
         const newRack = { id: Date.now(), name }
@@ -120,6 +130,15 @@ export function EditProductModal({ isOpen, onClose, onSuccess, product }: EditPr
                                 value={formData.productName}
                                 onChange={e => handleChange('productName', e.target.value)}
                                 required
+                            />
+                        </div>
+
+                        <div className="col-span-2">
+                            <label className="text-sm font-medium text-slate-700 mb-1.5 block">Manufacturer</label>
+                            <Input
+                                placeholder="e.g. Square Pharmaceuticals"
+                                value={formData.manufacture}
+                                onChange={e => handleChange('manufacture', e.target.value)}
                             />
                         </div>
 
@@ -200,12 +219,16 @@ export function EditProductModal({ isOpen, onClose, onSuccess, product }: EditPr
                     </div>
 
                     <div className="flex justify-end gap-3 pt-2">
-                        <Button type="button" variant="ghost" onClick={onClose}>
+                        <Button type="button" variant="ghost" onClick={onClose} disabled={isSubmitting}>
                             Cancel
                         </Button>
-                        <Button type="submit" className="gap-2 shadow-lg shadow-blue-600/20">
-                            <Save size={18} />
-                            Save Changes
+                        <Button type="submit" className="gap-2 shadow-lg shadow-blue-600/20" disabled={isSubmitting}>
+                            {isSubmitting ? (
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            ) : (
+                                <Save size={18} />
+                            )}
+                            {isSubmitting ? 'Saving...' : 'Save Changes'}
                         </Button>
                     </div>
                 </form>

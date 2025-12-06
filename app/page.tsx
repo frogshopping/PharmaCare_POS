@@ -49,7 +49,7 @@ export default function Home() {
 
     if (loading || !dashboardData) {
         return (
-            <DashboardLayout showRightSidebar={true}>
+            <DashboardLayout>
                 <div className="p-6 flex items-center justify-center h-full bg-slate-50">
                     <div className="text-center">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
@@ -99,7 +99,7 @@ export default function Home() {
     }));
 
     return (
-        <DashboardLayout showRightSidebar={true}>
+        <DashboardLayout>
             <div className="flex h-full">
                 <main className="flex-1 overflow-y-auto bg-slate-50 custom-scrollbar">
                     <div className="p-6">

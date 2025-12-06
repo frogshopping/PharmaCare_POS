@@ -64,14 +64,14 @@ const MedicineTable: React.FC<MedicineTableProps> = ({
                                                 {medicine.genericName}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-slate-700 font-semibold">${medicine.price.toFixed(2)}</td>
-                                        <td className="px-6 py-4 text-slate-600">${medicine.vat.toFixed(2)}</td>
+                                        <td className="px-6 py-4 text-slate-700 font-semibold">${(medicine.price || 0).toFixed(2)}</td>
+                                        <td className="px-6 py-4 text-slate-600">${(medicine.vat || 0).toFixed(2)}</td>
                                         <td className="px-6 py-4">
                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${medicine.inStock > 20
-                                                    ? 'bg-emerald-100 text-emerald-800'
-                                                    : medicine.inStock > 0
-                                                        ? 'bg-amber-100 text-amber-800'
-                                                        : 'bg-red-100 text-red-800'
+                                                ? 'bg-emerald-100 text-emerald-800'
+                                                : medicine.inStock > 0
+                                                    ? 'bg-amber-100 text-amber-800'
+                                                    : 'bg-red-100 text-red-800'
                                                 }`}>
                                                 {medicine.inStock}
                                             </span>
@@ -107,4 +107,4 @@ const MedicineTable: React.FC<MedicineTableProps> = ({
     );
 };
 
-export default MedicineTable;
+export default React.memo(MedicineTable);

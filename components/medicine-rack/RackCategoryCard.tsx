@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { ChevronRight, ChevronDown } from 'lucide-react';
-import { CategoryGroup } from '@/services/mockMedicineData';
+import { CategoryGroup } from '@/services/api';
 import MedicineList from './MedicineList';
 
 interface RackCategoryCardProps {

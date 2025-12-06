@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import RackCategoryCard from '@/components/medicine-rack/RackCategoryCard';
-import { getMedicinesByCategory } from '@/services/mockMedicineData';
+import { getMedicines } from '@/services/api';
 import { Search, Package, Calendar, Filter } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
@@ -12,18 +12,46 @@ export default function MedicineRackPage() {
     const [expandedCategory, setExpandedCategory] = useState<string | null>('Allergy');
     const [searchTerm, setSearchTerm] = useState('');
     const [viewMode, setViewMode] = useState<'category' | 'expiry'>('category');
+    const [loading, setLoading] = useState(true);
+    const [groupedMedicines, setGroupedMedicines] = useState<any[]>([]);
 
-    const allGroups = useMemo(() => getMedicinesByCategory(), []);
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                // Fetch from unified API
+                const medicines = await getMedicines();
+
+                // Group by Category
+                const grouped = medicines.reduce((acc: any, medicine) => {
+                    const cat = medicine.category || 'Uncategorized';
+                    if (!acc[cat]) {
+                        acc[cat] = { category: cat, medicines: [], count: 0 };
+                    }
+                    acc[cat].medicines.push(medicine);
+                    acc[cat].count++;
+                    return acc;
+                }, {});
+
+                setGroupedMedicines(Object.values(grouped));
+            } catch (error) {
+                console.error("Failed to load rack data", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
 
     // Filter logic
     const filteredGroups = useMemo(() => {
-        if (!searchTerm) return allGroups;
+        if (!searchTerm) return groupedMedicines;
 
-        return allGroups.map(group => {
+        return groupedMedicines.map(group => {
             const matchesCategory = group.category.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchingMedicines = group.medicines.filter(m =>
+            const matchingMedicines = group.medicines.filter((m: any) =>
                 m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                m.manufacturer.toLowerCase().includes(searchTerm.toLowerCase())
+                m.manufacture.toLowerCase().includes(searchTerm.toLowerCase())
             );
 
             if (matchesCategory || matchingMedicines.length > 0) {
@@ -34,8 +62,8 @@ export default function MedicineRackPage() {
                 };
             }
             return null;
-        }).filter(Boolean) as typeof allGroups;
-    }, [allGroups, searchTerm]);
+        }).filter(Boolean);
+    }, [groupedMedicines, searchTerm]);
 
     const handleCategoryToggle = (category: string) => {
         setExpandedCategory(curr => curr === category ? null : category);
@@ -97,7 +125,14 @@ export default function MedicineRackPage() {
                 {/* Main Content Area */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
                     <div className="max-w-7xl mx-auto">
-                        {filteredGroups.length > 0 ? (
+                        {loading ? (
+                            <div className="flex justify-center p-24">
+                                <div className="flex flex-col items-center gap-3">
+                                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+                                    <p className="text-slate-500 text-sm font-medium">Loading racks...</p>
+                                </div>
+                            </div>
+                        ) : filteredGroups.length > 0 ? (
                             <div className="grid grid-cols-1 gap-4 pb-12">
                                 {filteredGroups.map((group) => (
                                     <div key={group.category} className="transition-all duration-300 ease-in-out">

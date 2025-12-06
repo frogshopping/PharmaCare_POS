@@ -4,7 +4,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import MedicineTable from '@/components/catalog/MedicineTable';
 import Pagination from '@/components/catalog/Pagination';
-import { Medicine, getMedicines } from '@/services/api';
+import { Medicine, getMedicines, deleteMedicine } from '@/services/api';
 import { AddProductModal } from '@/components/inventory/AddProductModal';
 import { EditProductModal } from '@/components/inventory/EditProductModal';
 import {
@@ -21,7 +21,6 @@ import {
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
 
 export default function InventoryPage() {
     const [medicines, setMedicines] = useState<Medicine[]>([]);
@@ -46,20 +45,21 @@ export default function InventoryPage() {
 
     const itemsPerPage = 10;
 
+    const fetchMedicines = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const data = await getMedicines();
+            setMedicines(data);
+        } catch (err) {
+            console.error('Error fetching medicines:', err);
+            setError('Failed to load medicines. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchMedicines = async () => {
-            try {
-                setLoading(true);
-                setError(null);
-                const data = await getMedicines();
-                setMedicines(data);
-            } catch (err) {
-                console.error('Error fetching medicines:', err);
-                setError('Failed to load medicines. Please try again.');
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchMedicines();
     }, []);
 
@@ -131,6 +131,30 @@ export default function InventoryPage() {
     };
 
     const hasActiveFilters = searchQuery || Object.values(filters).some(Boolean);
+
+    const handleDelete = async (medicine: Medicine) => {
+        if (!confirm(`Are you sure you want to delete ${medicine.name}?`)) return;
+
+        try {
+            await deleteMedicine(medicine.id);
+            setMedicines(prev => prev.filter(m => m.id !== medicine.id));
+        } catch (error) {
+            console.error('Failed to delete medicine:', error);
+            alert('Failed to delete medicine');
+        }
+    };
+
+    const handleAddSuccess = () => {
+        fetchMedicines(); // Reload list to get new ID and data from server
+    };
+
+    const handleEditSuccess = (updatedProduct: Partial<Medicine> & { id: string }) => {
+        // Optimistic update
+        setMedicines(prev => prev.map(m => m.id === updatedProduct.id ? { ...m, ...updatedProduct } : m));
+        setIsEditProductOpen(false);
+        setEditingProduct(null);
+        fetchMedicines(); // Refresh to ensure data sync
+    };
 
     return (
         <DashboardLayout>
@@ -204,8 +228,8 @@ export default function InventoryPage() {
                                     <button
                                         onClick={() => setActiveTab('all')}
                                         className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${activeTab === 'all'
-                                                ? 'bg-slate-100 text-slate-800 shadow-sm'
-                                                : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                                            ? 'bg-slate-100 text-slate-800 shadow-sm'
+                                            : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
                                             }`}
                                     >
                                         All Products
@@ -213,8 +237,8 @@ export default function InventoryPage() {
                                     <button
                                         onClick={() => setActiveTab('low-stock')}
                                         className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${activeTab === 'low-stock'
-                                                ? 'bg-amber-50 text-amber-700 shadow-sm'
-                                                : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                                            ? 'bg-amber-50 text-amber-700 shadow-sm'
+                                            : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
                                             }`}
                                     >
                                         Low Stock
@@ -227,8 +251,8 @@ export default function InventoryPage() {
                                     <button
                                         onClick={() => setActiveTab('out-of-stock')}
                                         className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${activeTab === 'out-of-stock'
-                                                ? 'bg-red-50 text-red-700 shadow-sm'
-                                                : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                                            ? 'bg-red-50 text-red-700 shadow-sm'
+                                            : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
                                             }`}
                                     >
                                         Out of Stock
@@ -343,11 +367,7 @@ export default function InventoryPage() {
                                                 setEditingProduct(medicine);
                                                 setIsEditProductOpen(true);
                                             }}
-                                            onDelete={(medicine) => {
-                                                if (confirm(`Are you sure you want to delete ${medicine.name}?`)) {
-                                                    setMedicines(prev => prev.filter(m => m.id !== medicine.id));
-                                                }
-                                            }}
+                                            onDelete={handleDelete}
                                         />
                                         <div className="border-t border-slate-100 p-4 mt-auto bg-slate-50">
                                             <Pagination
@@ -376,23 +396,17 @@ export default function InventoryPage() {
                 <AddProductModal
                     isOpen={isAddProductOpen}
                     onClose={() => setIsAddProductOpen(false)}
-                    onSuccess={() => {
-                        console.log('Product Added');
-                        // In real app, reload medicines here
-                    }}
+                    onSuccess={handleAddSuccess}
                 />
 
                 <EditProductModal
                     isOpen={isEditProductOpen}
                     onClose={() => setIsEditProductOpen(false)}
                     product={editingProduct}
-                    onSuccess={(updatedProduct) => {
-                        setMedicines(prev => prev.map(m => m.id === updatedProduct.id ? { ...m, ...updatedProduct } : m));
-                        setIsEditProductOpen(false);
-                        setEditingProduct(null);
-                    }}
+                    onSuccess={handleEditSuccess}
                 />
             </div>
         </DashboardLayout>
     );
 }
+

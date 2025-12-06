@@ -6,10 +6,9 @@ import TopBar from './TopBar';
 
 interface DashboardLayoutProps {
     children: React.ReactNode;
-    showRightSidebar?: boolean;
 }
 
-const DashboardLayout = ({ children, showRightSidebar = false }: DashboardLayoutProps) => {
+const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     return (
         <div className="flex h-screen bg-slate-50 overflow-hidden">
             <Sidebar />
