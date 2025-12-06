@@ -1,110 +1,128 @@
 'use client';
 
 import React from 'react';
-import { ShoppingCart, Edit, Barcode, Trash2 } from 'lucide-react';
+import { Edit2, Trash2, ShoppingCart, Disc, Pill, GlassWater, Syringe, Box } from 'lucide-react';
 import { Medicine } from '@/services/api';
+import { Button } from '@/components/ui/Button';
 
 interface MedicineTableProps {
     medicines: Medicine[];
-    onRetail?: (medicine: Medicine) => void;
-    onEdit?: (medicine: Medicine) => void;
-    onBarcode?: (medicine: Medicine) => void;
-    onDelete?: (medicine: Medicine) => void;
+    onRetail: (medicine: Medicine) => void;
+    onEdit: (medicine: Medicine) => void;
+    onDelete: (medicine: Medicine) => void;
+    onViewDetails?: (medicine: Medicine) => void; // New prop for opening details modal
 }
 
-const MedicineTable: React.FC<MedicineTableProps> = ({
+export default function MedicineTable({
     medicines,
     onRetail,
     onEdit,
-    onBarcode,
-    onDelete
-}) => {
+    onDelete,
+    onViewDetails
+}: MedicineTableProps) {
+
+    // Helper for Type Icon
+    const getTypeIcon = (type?: string) => {
+        switch (type) {
+            case 'Syrup':
+            case 'Suspension':
+                return <GlassWater size={16} className="text-blue-500" />;
+            case 'Capsule':
+                return <Pill size={16} className="text-orange-500" />;
+            case 'Injection':
+                return <Syringe size={16} className="text-red-500" />;
+            case 'Cream':
+                return <Box size={16} className="text-pink-500" />;
+            case 'Tablet':
+            default:
+                return <Disc size={16} className="text-purple-500" />;
+        }
+    };
+
     return (
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-100">
-            <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                    <thead className="text-xs text-slate-500 uppercase bg-slate-50/50 border-b border-slate-100">
-                        <tr>
-                            <th className="px-6 py-4 font-semibold">SRL. No.</th>
-                            <th className="px-6 py-4 font-semibold">Medicine Name</th>
-                            <th className="px-6 py-4 font-semibold">Strength</th>
-                            <th className="px-6 py-4 font-semibold">Manufacturer</th>
-                            <th className="px-6 py-4 font-semibold">Generic Name</th>
-                            <th className="px-6 py-4 font-semibold">Price</th>
-                            <th className="px-6 py-4 font-semibold">VAT</th>
-                            <th className="px-6 py-4 font-semibold">In Stock</th>
-                            <th className="px-6 py-4 font-semibold text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                        {medicines.length === 0 ? (
-                            <tr>
-                                <td colSpan={9} className="px-6 py-12 text-center text-slate-500">
-                                    No medicines found
-                                </td>
-                            </tr>
-                        ) : (
-                            medicines.map((medicine) => {
-                                const isHighStock = medicine.inStock >= 100;
-                                return (
-                                    <tr
-                                        key={medicine.id}
-                                        className={`hover:bg-slate-50/50 transition-colors ${isHighStock ? 'bg-emerald-50/30' : ''
-                                            }`}
+        <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+                <thead className="bg-slate-50/50 border-b border-slate-200">
+                    <tr>
+                        <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Product Info</th>
+                        <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Type / Location</th>
+                        <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Pricing</th>
+                        <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Stock</th>
+                        <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Batch / Expiry</th>
+                        <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                    {medicines.map((medicine) => (
+                        <tr
+                            key={medicine.code || medicine.id}
+                            className="hover:bg-slate-50/80 transition-colors group cursor-pointer"
+                            onClick={() => onViewDetails?.(medicine)} // Row click opens details
+                        >
+                            <td className="px-6 py-4 align-top">
+                                <div className="font-bold text-slate-700">{medicine.name}</div>
+                                <div className="text-xs text-slate-500 mt-0.5">{medicine.strength || 'N/A'} • {medicine.manufacture || 'Unknown Manufacturer'}</div>
+                                <div className="text-[10px] text-slate-400 font-mono mt-1">Code: {medicine.productCode}</div>
+                            </td>
+                            <td className="px-6 py-4 align-top">
+                                <div className="flex items-center gap-2 mb-1">
+                                    {getTypeIcon(medicine.type)}
+                                    <span className="text-sm text-slate-600">{medicine.type || 'Tablet'}</span>
+                                </div>
+                                <div className="inline-flex items-center px-1.5 py-0.5 rounded border border-slate-200 bg-slate-50 text-[10px] font-medium text-slate-500">
+                                    {medicine.rackLocation || medicine.rackNo || 'Unassigned'}
+                                </div>
+                            </td>
+                            <td className="px-6 py-4 align-top">
+                                <div className="text-sm font-semibold text-slate-700">৳{medicine.price}</div>
+                                <div className="text-xs text-slate-500">Buy: ৳{medicine.buyingPrice ? medicine.buyingPrice.toFixed(2) : '-'}</div>
+                            </td>
+                            <td className="px-6 py-4 align-top">
+                                <div className={`inline-flex items-center px-2 py-1 rounded-md border text-xs font-bold ${medicine.inStock === 0 ? 'bg-red-50 text-red-700 border-red-100' :
+                                        medicine.inStock < 20 ? 'bg-amber-50 text-amber-700 border-amber-100' :
+                                            'bg-emerald-50 text-emerald-700 border-emerald-100'
+                                    }`}>
+                                    {medicine.inStock} units
+                                </div>
+                            </td>
+                            <td className="px-6 py-4 align-top">
+                                <div className="text-sm font-mono text-slate-600">{medicine.batchId || 'N/A'}</div>
+                                <div className="text-xs text-slate-500 mt-0.5">Exp: {medicine.expiryDate || 'N/A'}</div>
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                                <div className="flex justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                                    <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        className="h-8 w-8 text-slate-500 hover:text-blue-600 hover:bg-blue-50"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onEdit(medicine);
+                                        }}
+                                        title="Edit"
+                                        aria-label="Edit"
                                     >
-                                        <td className="px-6 py-4 text-slate-600 font-medium">{medicine.srlNo}</td>
-                                        <td className="px-6 py-4">
-                                            <span className="font-semibold text-slate-800">{medicine.name}</span>
-                                            {medicine.barcode && <div className="text-xs text-slate-400 mt-0.5">#{medicine.barcode}</div>}
-                                        </td>
-                                        <td className="px-6 py-4 text-slate-600">{medicine.strength || 'N/A'}</td>
-                                        <td className="px-6 py-4 text-slate-600">{medicine.manufacture}</td>
-                                        <td className="px-6 py-4 text-slate-600">
-                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700">
-                                                {medicine.genericName}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-slate-700 font-semibold">${(medicine.price || 0).toFixed(2)}</td>
-                                        <td className="px-6 py-4 text-slate-600">${(medicine.vat || 0).toFixed(2)}</td>
-                                        <td className="px-6 py-4">
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${medicine.inStock > 20
-                                                ? 'bg-emerald-100 text-emerald-800'
-                                                : medicine.inStock > 0
-                                                    ? 'bg-amber-100 text-amber-800'
-                                                    : 'bg-red-100 text-red-800'
-                                                }`}>
-                                                {medicine.inStock}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <button
-                                                    onClick={() => onEdit?.(medicine)}
-                                                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                                                    title="Edit"
-                                                    aria-label="Edit medicine"
-                                                >
-                                                    <Edit size={16} />
-                                                </button>
-                                                <button
-                                                    onClick={() => onDelete?.(medicine)}
-                                                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                                                    title="Delete"
-                                                    aria-label="Delete medicine"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })
-                        )}
-                    </tbody>
-                </table>
-            </div>
+                                        <Edit2 size={14} />
+                                    </Button>
+                                    <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        className="h-8 w-8 text-slate-500 hover:text-red-600 hover:bg-red-50"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onDelete(medicine);
+                                        }}
+                                        title="Delete"
+                                        aria-label="Delete"
+                                    >
+                                        <Trash2 size={14} />
+                                    </Button>
+                                </div>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
         </div>
     );
-};
-
-export default React.memo(MedicineTable);
+}
