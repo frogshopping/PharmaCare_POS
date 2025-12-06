@@ -1,347 +1,202 @@
 "use client";
 
-import { useState } from "react";
-import type React from "react";
-import { AlertCircle, BarChart3, DollarSign, FileText, ShieldAlert, ShoppingCart, Users } from "lucide-react";
-import DashboardLayout from "@/components/layout/DashboardLayout";
+import React, { useState } from 'react';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import { Card } from '@/components/ui/Card';
+import {
+  FileText,
+  DollarSign,
+  Users,
+  AlertCircle,
+  ChevronDown,
+  ChevronUp,
+  Package,
+  ShieldAlert,
+  BarChart3,
+  ShoppingCart
+} from 'lucide-react';
+import { ProfitabilityReport } from '@/components/reports/ProfitabilityReport';
+import { PurchaseReport } from '@/components/reports/PurchaseReport';
+
+type SectionId = "expiry" | "purchase" | "profitability" | "customers" | "finance" | "sales";
 
 const summaryCards = [
-  {
-    label: "Total Revenue",
-    value: "$127,450",
-    icon: DollarSign,
-    color: "from-sky-500/80 to-sky-400/40",
-  },
-  {
-    label: "Net Profit",
-    value: "$31,200",
-    icon: BarChart3,
-    color: "from-emerald-500/80 to-emerald-400/40",
-  },
-  {
-    label: "Total Sales",
-    value: "1,847",
-    icon: ShoppingCart,
-    color: "from-indigo-500/80 to-indigo-400/40",
-  },
-  {
-    label: "Active Customers",
-    value: "892",
-    icon: Users,
-    color: "from-fuchsia-500/80 to-fuchsia-400/40",
-  },
-];
-
-const expiryItems = [
-  {
-    medicine: "Aspirin 500mg",
-    batch: "BT-2024-111",
-    qty: 450,
-    expiry: "2025-12-15",
-    daysLeft: 13,
-    value: "$2750",
-  },
-  {
-    medicine: "Amoxicillin",
-    batch: "BT-2024-782",
-    qty: 200,
-    expiry: "2025-12-20",
-    daysLeft: 18,
-    value: "$4000",
-  },
-  {
-    medicine: "Ibuprofen",
-    batch: "BT-2024-456",
-    qty: 180,
-    expiry: "2026-01-10",
-    daysLeft: 39,
-    value: "$1800",
-  },
-];
-
-const customerPrescriptionStats = [
-  { label: "Total Prescriptions", value: 248 },
-  { label: "Chronic Patients", value: 34 },
-  { label: "Active Doctors", value: 18 },
-];
-
-const customerPrescriptionLogs = [
-  {
-    customer: "John Smith",
-    rx: "RX-88211",
-    doctor: "Dr. Anderson",
-    meds: "Morphine, Aspirin",
-    date: "2025-12-01",
-  },
-  {
-    customer: "Emily Davis",
-    rx: "RX-88119",
-    doctor: "Dr. Wilson",
-    meds: "Codeine, Ibuprofen",
-    date: "2025-12-01",
-  },
-];
-
-type SectionId =
-  | "legal"
-  | "purchase"
-  | "inventory"
-  | "profitability"
-  | "customers"
-  | "finance";
-
-const sectionMockMetrics: Record<SectionId, { label: string; value: string }[]> = {
-  purchase: [
-    { label: "Active suppliers", value: "12" },
-    { label: "Open purchase orders", value: "6" },
-    { label: "Monthly spend", value: "$42,300" },
-  ],
-  inventory: [
-    { label: "Overall stock health", value: "Good" },
-    { label: "Low-stock SKUs", value: "18" },
-    { label: "Overstocked SKUs", value: "9" },
-  ],
-  profitability: [
-    { label: "Gross margin", value: "28.4%" },
-    { label: "Top profitable category", value: "Chronic Care" },
-    { label: "Loss-making SKUs", value: "5" },
-  ],
-  customers: [],
-  finance: [
-    { label: "Outstanding receivables", value: "$18,900" },
-    { label: "Pending vendor payments", value: "$7,450" },
-    { label: "Cash on hand", value: "$12,300" },
-  ],
-};
-
-const sectionConfigs: {
-  id: SectionId;
-  title: string;
-  icon: React.ComponentType<{ className?: string }>;
-  accent: string;
-}[] = [
-  { id: "purchase", title: "Purchase & Suppliers", icon: FileText, accent: "bg-sky-500" },
-  { id: "profitability", title: "Profitability", icon: DollarSign, accent: "bg-emerald-500" },
-  { id: "customers", title: "Customer & Prescriptions", icon: Users, accent: "bg-indigo-500" },
-  { id: "finance", title: "Finance & Cash Summary", icon: DollarSign, accent: "bg-slate-500" },
+  { label: "Total Revenue", value: "$127,450", icon: DollarSign, color: "bg-sky-50" },
+  { label: "Net Profit", value: "$31,200", icon: BarChart3, color: "bg-emerald-50" },
+  { label: "Total Sales", value: "1,847", icon: ShoppingCart, color: "bg-indigo-50" },
+  { label: "Active Customers", value: "892", icon: Users, color: "bg-fuchsia-50" },
 ];
 
 export default function ReportsPage() {
-  const [openSection, setOpenSection] = useState<SectionId | null>(null);
+  const [openSection, setOpenSection] = useState<SectionId | null>("expiry");
+
+  const toggleSection = (id: SectionId) => {
+    setOpenSection(prev => prev === id ? null : id);
+  };
 
   return (
     <DashboardLayout>
-      <main className="flex-1 overflow-y-auto bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-900">
-        <div className="px-8 py-6 max-w-7xl mx-auto">
+      <div className="flex-1 overflow-y-auto bg-slate-50 custom-scrollbar">
+        <div className="px-8 py-6 max-w-7xl mx-auto space-y-6">
+
           {/* Header */}
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-semibold text-white mb-1">Advanced Reports</h1>
-              <p className="text-sm text-slate-300">
-                Comprehensive pharmacy analytics and reporting system
-              </p>
+              <h1 className="text-2xl font-bold text-slate-800">Advanced Reports</h1>
+              <p className="text-sm text-slate-500">Comprehensive pharmacy analytics and reporting system</p>
             </div>
-            <button className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-sky-500 hover:bg-sky-400 text-sm font-medium text-white shadow-lg shadow-sky-500/40">
-              <FileText className="w-4 h-4" />
-              Export All Reports
-            </button>
           </div>
 
           {/* Top KPI row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
             {summaryCards.map((card) => (
-              <div
-                key={card.label}
-                className={`relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br ${card.color} px-5 py-4 flex items-center justify-between shadow-lg shadow-slate-900/40`}
-              >
+              <Card key={card.label} className="p-4 flex items-center justify-between border-slate-100 shadow-sm">
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-slate-100/80">
-                    {card.label}
-                  </p>
-                  <p className="mt-2 text-2xl font-semibold text-white">{card.value}</p>
+                  <p className="text-xs uppercase tracking-wide text-slate-500 font-semibold">{card.label}</p>
+                  <p className="mt-1 text-2xl font-bold text-slate-800">{card.value}</p>
                 </div>
-                <div className="w-10 h-10 rounded-xl bg-slate-950/40 flex items-center justify-center text-white/90">
+                <div className={`w-10 h-10 rounded-xl ${card.color} flex items-center justify-center text-slate-700`}>
                   <card.icon className="w-5 h-5" />
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
 
-          {/* Expiry Reports main card */}
-          <section className="mb-6">
-            <div className="rounded-3xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-[0_18px_60px_rgba(15,23,42,0.65)] overflow-hidden">
-              {/* Section header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-slate-900/80">
+          {/* Collapsible Sections */}
+          <div className="space-y-4">
+            {/* 1. Inventory Health (Expiry) */}
+            <div className="border border-slate-200 rounded-xl bg-white shadow-sm overflow-hidden">
+              <button
+                onClick={() => toggleSection('expiry')}
+                className="w-full flex items-center justify-between p-4 bg-purple-50 hover:bg-purple-100/80 transition-colors text-left"
+              >
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-amber-500/90 flex items-center justify-center text-white shadow-lg shadow-amber-500/40">
-                    <AlertCircle className="w-5 h-5" />
+                  <div className="p-2 bg-purple-100 text-purple-600 rounded-lg">
+                    <Package size={20} />
                   </div>
-                  <div>
-                    <h2 className="text-base font-semibold text-white">Expiry Reports</h2>
-                    <p className="text-xs text-slate-300">
-                      Track upcoming expiries, stock value at risk, and potential loss
-                    </p>
+                  <span className="font-semibold text-slate-800">Inventory Health (Expiry)</span>
+                </div>
+                {openSection === 'expiry' ? <ChevronUp size={20} className="text-slate-400" /> : <ChevronDown size={20} className="text-slate-400" />}
+              </button>
+
+              {openSection === 'expiry' && (
+                <div className="p-6 border-t border-slate-100 animation-expand">
+                  {/* Expiry content */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div className="bg-red-50 p-4 rounded-xl border border-red-100">
+                      <p className="text-sm text-red-600 font-medium">Expired Stock Value</p>
+                      <h3 className="text-2xl font-bold text-red-700 mt-1">$8,050</h3>
+                    </div>
+                    <div className="bg-orange-50 p-4 rounded-xl border border-orange-100">
+                      <p className="text-sm text-orange-600 font-medium">Expiring Soon (30 days)</p>
+                      <h3 className="text-2xl font-bold text-orange-700 mt-1">24 Items</h3>
+                    </div>
+                    <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                      <p className="text-sm text-blue-600 font-medium">Items Processed</p>
+                      <h3 className="text-2xl font-bold text-blue-700 mt-1">156</h3>
+                    </div>
                   </div>
-                </div>
-              </div>
 
-              {/* Expiry summary cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-6 pt-5">
-                <div className="rounded-2xl border border-white/5 bg-slate-900/80 px-5 py-4 flex flex-col justify-between">
-                  <p className="text-xs text-slate-300">Upcoming Expiry (30 days)</p>
-                  <p className="mt-3 text-3xl font-semibold text-white">24 Items</p>
-                </div>
-                <div className="rounded-2xl border border-white/5 bg-slate-900/80 px-5 py-4 flex flex-col justify-between">
-                  <p className="text-xs text-slate-300">Expired Stock Value</p>
-                  <p className="mt-3 text-3xl font-semibold text-rose-300">$8,050</p>
-                </div>
-                <div className="rounded-2xl border border-white/5 bg-slate-900/80 px-5 py-4 flex flex-col justify-between">
-                  <p className="text-xs text-slate-300">Expiry Loss (This Month)</p>
-                  <p className="mt-3 text-3xl font-semibold text-amber-300">$1,250</p>
-                </div>
-              </div>
-
-              {/* Upcoming expiry table */}
-              <div className="px-6 pt-6 pb-5">
-                <h3 className="text-sm font-medium text-slate-100 mb-3">Upcoming Expiry Items</h3>
-                <div className="overflow-hidden rounded-2xl border border-white/5 bg-slate-950/40">
-                  <table className="min-w-full text-sm">
-                    <thead className="bg-slate-900/80 text-slate-300 text-xs uppercase tracking-wide">
-                      <tr>
-                        <th className="px-4 py-3 text-left font-medium">Medicine</th>
-                        <th className="px-4 py-3 text-left font-medium">Batch No.</th>
-                        <th className="px-4 py-3 text-right font-medium">Quantity</th>
-                        <th className="px-4 py-3 text-left font-medium">Expiry Date</th>
-                        <th className="px-4 py-3 text-center font-medium">Days Left</th>
-                        <th className="px-4 py-3 text-right font-medium">Value</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {expiryItems.map((item, idx) => (
-                        <tr key={item.batch} className={idx % 2 === 0 ? "bg-slate-900/60" : "bg-slate-900/40"}>
-                          <td className="px-4 py-3 text-slate-100">{item.medicine}</td>
-                          <td className="px-4 py-3 text-slate-300">{item.batch}</td>
-                          <td className="px-4 py-3 text-right text-slate-100">{item.qty}</td>
-                          <td className="px-4 py-3 text-slate-300">{item.expiry}</td>
-                          <td className="px-4 py-3 text-center">
-                            <span
-                              className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
-                                item.daysLeft <= 15
-                                  ? "bg-rose-500/15 text-rose-300 border border-rose-500/30"
-                                  : "bg-amber-500/15 text-amber-300 border border-amber-500/30"
-                              }`}
-                            >
-                              {item.daysLeft} days
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-right text-slate-100">{item.value}</td>
+                  {/* Simple table for expiry */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left">
+                      <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
+                        <tr>
+                          <th className="px-4 py-3">Medicine</th>
+                          <th className="px-4 py-3">Batch</th>
+                          <th className="px-4 py-3">Expiry</th>
+                          <th className="px-4 py-3 text-center">Days Left</th>
+                          <th className="px-4 py-3 text-right">Value</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {[1, 2, 3].map((i) => (
+                          <tr key={i} className="hover:bg-slate-50">
+                            <td className="px-4 py-3 font-medium text-slate-800">Amoxicillin 500mg</td>
+                            <td className="px-4 py-3 text-slate-500">BATCH-{100 + i}</td>
+                            <td className="px-4 py-3 text-slate-500">2025-12-{10 + i}</td>
+                            <td className="px-4 py-3 text-center">
+                              <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded-full text-xs font-medium">
+                                {15 + i} days
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-right font-medium text-slate-800">$120.00</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
-          </section>
 
-          {/* Other report sections as accordions */}
-          <div className="space-y-3 pb-10">
-            {sectionConfigs.map((section) => {
-              const Icon = section.icon;
-              const isOpen = openSection === section.id;
-              return (
-                <div
-                  key={section.id}
-                  className="rounded-3xl border border-white/10 bg-slate-900/70 overflow-hidden shadow-[0_16px_50px_rgba(15,23,42,0.65)]"
-                >
-                  <button
-                    type="button"
-                    onClick={() => setOpenSection((prev) => (prev === section.id ? null : section.id))}
-                    className="w-full flex items-center justify-between px-5 py-4 text-left text-sm text-slate-100 hover:bg-slate-900/90 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-9 h-9 rounded-xl ${section.accent} flex items-center justify-center text-white shadow-lg/40`}
-                      >
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <span className="font-medium">{section.title}</span>
-                    </div>
-                    <span className="ml-4 inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-800 text-slate-200 text-xs">
-                      {isOpen ? "−" : "+"}
-                    </span>
-                  </button>
-
-                  {isOpen && (
-                    <div className="px-5 pb-5 pt-1 bg-slate-950/40 border-t border-white/5">
-                      {section.id === "customers" ? (
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            {customerPrescriptionStats.map((stat) => (
-                              <div
-                                key={stat.label}
-                                className="rounded-2xl border border-white/5 bg-slate-900/80 px-4 py-3"
-                              >
-                                <p className="text-xs text-slate-300">{stat.label}</p>
-                                <p className="mt-2 text-2xl font-semibold text-white">{stat.value}</p>
-                              </div>
-                            ))}
-                          </div>
-
-                          <div>
-                            <h3 className="text-sm font-medium text-slate-100 mb-2">Prescription Logs</h3>
-                            <div className="overflow-hidden rounded-2xl border border-white/5 bg-slate-950/40">
-                              <table className="min-w-full text-sm">
-                                <thead className="bg-slate-900/80 text-slate-300 text-xs uppercase tracking-wide">
-                                  <tr>
-                                    <th className="px-4 py-3 text-left font-medium">Customer</th>
-                                    <th className="px-4 py-3 text-left font-medium">Prescription No.</th>
-                                    <th className="px-4 py-3 text-left font-medium">Doctor</th>
-                                    <th className="px-4 py-3 text-left font-medium">Medication</th>
-                                    <th className="px-4 py-3 text-left font-medium">Date</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {customerPrescriptionLogs.map((row, idx) => (
-                                    <tr
-                                      key={`${row.rx}-${idx}`}
-                                      className={idx % 2 === 0 ? "bg-slate-900/60" : "bg-slate-900/40"}
-                                    >
-                                      <td className="px-4 py-3 text-slate-100">{row.customer}</td>
-                                      <td className="px-4 py-3 text-slate-300">{row.rx}</td>
-                                      <td className="px-4 py-3 text-slate-300">{row.doctor}</td>
-                                      <td className="px-4 py-3 text-slate-300">{row.meds}</td>
-                                      <td className="px-4 py-3 text-slate-300">{row.date}</td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="rounded-2xl border border-white/5 bg-slate-900/80 px-4 py-4">
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            {sectionMockMetrics[section.id].map((metric) => (
-                              <div
-                                key={metric.label}
-                                className="rounded-2xl border border-white/5 bg-slate-950/40 px-4 py-3"
-                              >
-                                <p className="text-xs text-slate-300">{metric.label}</p>
-                                <p className="mt-2 text-xl font-semibold text-white">{metric.value}</p>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
+            {/* 2. Purchase & Suppliers */}
+            <div className="border border-slate-200 rounded-xl bg-white shadow-sm overflow-hidden">
+              <button
+                onClick={() => toggleSection('purchase')}
+                className="w-full flex items-center justify-between p-4 bg-sky-50 hover:bg-sky-100/80 transition-colors text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-sky-100 text-sky-600 rounded-lg">
+                    <FileText size={20} />
+                  </div>
+                  <span className="font-semibold text-slate-800">Purchase & Suppliers</span>
                 </div>
-              );
-            })}
+                {openSection === 'purchase' ? <ChevronUp size={20} className="text-slate-400" /> : <ChevronDown size={20} className="text-slate-400" />}
+              </button>
+              {openSection === 'purchase' && (
+                <div className="p-6 border-t border-slate-100">
+                  <PurchaseReport />
+                </div>
+              )}
+            </div>
+
+            {/* 3. Profitability */}
+            <div className="border border-slate-200 rounded-xl bg-white shadow-sm overflow-hidden">
+              <button
+                onClick={() => toggleSection('profitability')}
+                className="w-full flex items-center justify-between p-4 bg-emerald-50 hover:bg-emerald-100/80 transition-colors text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
+                    <DollarSign size={20} />
+                  </div>
+                  <span className="font-semibold text-slate-800">Profitability</span>
+                </div>
+                {openSection === 'profitability' ? <ChevronUp size={20} className="text-slate-400" /> : <ChevronDown size={20} className="text-slate-400" />}
+              </button>
+              {openSection === 'profitability' && (
+                <div className="p-6 border-t border-slate-100">
+                  <ProfitabilityReport />
+                </div>
+              )}
+            </div>
+
+            {/* 4. Sales Deep-Dive */}
+            <div className="border border-slate-200 rounded-xl bg-white shadow-sm overflow-hidden">
+              <button
+                onClick={() => toggleSection('sales')}
+                className="w-full flex items-center justify-between p-4 bg-cyan-50 hover:bg-cyan-100/80 transition-colors text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-cyan-100 text-cyan-600 rounded-lg">
+                    <ShoppingCart size={20} />
+                  </div>
+                  <span className="font-semibold text-slate-800">Sales Deep-Dive</span>
+                </div>
+                {openSection === 'sales' ? <ChevronUp size={20} className="text-slate-400" /> : <ChevronDown size={20} className="text-slate-400" />}
+              </button>
+              {openSection === 'sales' && (
+                <div className="p-6 text-center text-slate-500 py-12">
+                  <BarChart3 className="mx-auto h-12 w-12 text-slate-300 mb-3" />
+                  <p>Detailed sales analytics module coming soon...</p>
+                </div>
+              )}
+            </div>
           </div>
+
         </div>
-      </main>
+      </div>
     </DashboardLayout>
   );
 }

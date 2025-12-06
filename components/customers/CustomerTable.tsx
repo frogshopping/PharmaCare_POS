@@ -8,9 +8,11 @@ import { Button } from '@/components/ui/Button';
 
 interface CustomerTableProps {
     customers: Customer[];
+    onEdit: (customer: Customer) => void;
+    onDelete: (customer: Customer) => void;
 }
 
-const CustomerTable: React.FC<CustomerTableProps> = ({ customers }) => {
+const CustomerTable: React.FC<CustomerTableProps> = ({ customers, onEdit, onDelete }) => {
     return (
         <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
@@ -75,10 +77,20 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ customers }) => {
                                 </td>
                                 <td className="px-6 py-4 text-right">
                                     <div className="flex items-center justify-end gap-2">
-                                        <Button size="icon" variant="ghost" className="h-8 w-8 text-slate-400 hover:text-blue-600">
+                                        <Button
+                                            size="icon"
+                                            variant="ghost"
+                                            className="h-8 w-8 text-slate-400 hover:text-blue-600"
+                                            onClick={() => onEdit(customer)}
+                                        >
                                             <Edit size={16} />
                                         </Button>
-                                        <Button size="icon" variant="ghost" className="h-8 w-8 text-slate-400 hover:text-red-600">
+                                        <Button
+                                            size="icon"
+                                            variant="ghost"
+                                            className="h-8 w-8 text-slate-400 hover:text-red-600"
+                                            onClick={() => onDelete(customer)}
+                                        >
                                             <Trash2 size={16} />
                                         </Button>
                                     </div>

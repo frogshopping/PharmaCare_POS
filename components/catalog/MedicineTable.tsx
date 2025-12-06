@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Image as ImageIcon, ShoppingCart, Edit, Barcode, Trash2 } from 'lucide-react';
+import { ShoppingCart, Edit, Barcode, Trash2 } from 'lucide-react';
 import { Medicine } from '@/services/api';
 
 interface MedicineTableProps {
@@ -12,35 +12,34 @@ interface MedicineTableProps {
     onDelete?: (medicine: Medicine) => void;
 }
 
-const MedicineTable: React.FC<MedicineTableProps> = ({ 
-    medicines, 
-    onRetail, 
-    onEdit, 
-    onBarcode, 
-    onDelete 
+const MedicineTable: React.FC<MedicineTableProps> = ({
+    medicines,
+    onRetail,
+    onEdit,
+    onBarcode,
+    onDelete
 }) => {
     return (
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-100">
             <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-                    <thead className="text-xs text-gray-600 uppercase bg-gray-50 border-b">
-                    <tr>
-                        <th className="px-4 py-3 font-medium">SRL. No.</th>
-                        <th className="px-4 py-3 font-medium">Medicine Name</th>
-                            <th className="px-4 py-3 font-medium">Product Code</th>
-                        <th className="px-4 py-3 font-medium">Strength</th>
-                            <th className="px-4 py-3 font-medium">Manufacturer</th>
-                        <th className="px-4 py-3 font-medium">Generic Name</th>
-                        <th className="px-4 py-3 font-medium">Price</th>
-                            <th className="px-4 py-3 font-medium">VAT</th>
-                            <th className="px-4 py-3 font-medium">In Stock</th>
-                            <th className="px-4 py-3 font-medium">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
+                <table className="w-full text-sm text-left">
+                    <thead className="text-xs text-slate-500 uppercase bg-slate-50/50 border-b border-slate-100">
+                        <tr>
+                            <th className="px-6 py-4 font-semibold">SRL. No.</th>
+                            <th className="px-6 py-4 font-semibold">Medicine Name</th>
+                            <th className="px-6 py-4 font-semibold">Strength</th>
+                            <th className="px-6 py-4 font-semibold">Manufacturer</th>
+                            <th className="px-6 py-4 font-semibold">Generic Name</th>
+                            <th className="px-6 py-4 font-semibold">Price</th>
+                            <th className="px-6 py-4 font-semibold">VAT</th>
+                            <th className="px-6 py-4 font-semibold">In Stock</th>
+                            <th className="px-6 py-4 font-semibold text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
                         {medicines.length === 0 ? (
                             <tr>
-                                <td colSpan={10} className="px-4 py-8 text-center text-gray-500">
+                                <td colSpan={9} className="px-6 py-12 text-center text-slate-500">
                                     No medicines found
                                 </td>
                             </tr>
@@ -48,68 +47,61 @@ const MedicineTable: React.FC<MedicineTableProps> = ({
                             medicines.map((medicine) => {
                                 const isHighStock = medicine.inStock >= 100;
                                 return (
-                                    <tr 
-                                        key={medicine.id} 
-                                        className={`border-b hover:bg-gray-50 ${
-                                            isHighStock ? 'bg-green-50' : ''
-                                        }`}
+                                    <tr
+                                        key={medicine.id}
+                                        className={`hover:bg-slate-50/50 transition-colors ${isHighStock ? 'bg-emerald-50/30' : ''
+                                            }`}
                                     >
-                            <td className="px-4 py-3 text-gray-900">{medicine.srlNo}</td>
-                            <td className="px-4 py-3">
-                                <div className="flex items-center gap-2">
-                                                <div className="w-8 h-8 bg-gray-100 rounded border border-gray-200 flex items-center justify-center text-gray-400">
-                                        <ImageIcon size={16} />
-                                    </div>
-                                    <span className="font-medium text-gray-900">{medicine.name}</span>
-                                            </div>
+                                        <td className="px-6 py-4 text-slate-600 font-medium">{medicine.srlNo}</td>
+                                        <td className="px-6 py-4">
+                                            <span className="font-semibold text-slate-800">{medicine.name}</span>
+                                            {medicine.barcode && <div className="text-xs text-slate-400 mt-0.5">#{medicine.barcode}</div>}
                                         </td>
-                                        <td className="px-4 py-3 text-gray-900">
-                                            {medicine.productCode} {medicine.barcode && `(${medicine.barcode})`}
+                                        <td className="px-6 py-4 text-slate-600">{medicine.strength || 'N/A'}</td>
+                                        <td className="px-6 py-4 text-slate-600">{medicine.manufacture}</td>
+                                        <td className="px-6 py-4 text-slate-600">
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700">
+                                                {medicine.genericName}
+                                            </span>
                                         </td>
-                                        <td className="px-4 py-3 text-gray-900">{medicine.strength || 'N/A'}</td>
-                                        <td className="px-4 py-3 text-gray-900">{medicine.manufacture}</td>
-                                        <td className="px-4 py-3 text-gray-900">{medicine.genericName}</td>
-                                        <td className="px-4 py-3 text-gray-900 font-semibold">${medicine.price.toFixed(2)}</td>
-                                        <td className="px-4 py-3 text-gray-900">${medicine.vat.toFixed(2)}</td>
-                                        <td className="px-4 py-3 text-gray-900 font-semibold">{medicine.inStock}</td>
-                                        <td className="px-4 py-3">
-                                            <div className="flex items-center gap-1">
-                                                <button
-                                                    onClick={() => onRetail?.(medicine)}
-                                                    className="p-1.5 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                                                    title="Retail"
-                                                >
-                                                    <ShoppingCart size={14} />
-                                                </button>
+                                        <td className="px-6 py-4 text-slate-700 font-semibold">${medicine.price.toFixed(2)}</td>
+                                        <td className="px-6 py-4 text-slate-600">${medicine.vat.toFixed(2)}</td>
+                                        <td className="px-6 py-4">
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${medicine.inStock > 20
+                                                    ? 'bg-emerald-100 text-emerald-800'
+                                                    : medicine.inStock > 0
+                                                        ? 'bg-amber-100 text-amber-800'
+                                                        : 'bg-red-100 text-red-800'
+                                                }`}>
+                                                {medicine.inStock}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <div className="flex items-center justify-end gap-2">
                                                 <button
                                                     onClick={() => onEdit?.(medicine)}
-                                                    className="p-1.5 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+                                                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                                                     title="Edit"
+                                                    aria-label="Edit medicine"
                                                 >
-                                                    <Edit size={14} />
-                                                </button>
-                                                <button
-                                                    onClick={() => onBarcode?.(medicine)}
-                                                    className="p-1.5 bg-purple-500 text-white rounded hover:bg-purple-600 transition-colors"
-                                                    title="Barcode"
-                                                >
-                                                    <Barcode size={14} />
+                                                    <Edit size={16} />
                                                 </button>
                                                 <button
                                                     onClick={() => onDelete?.(medicine)}
-                                                    className="p-1.5 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                                                     title="Delete"
+                                                    aria-label="Delete medicine"
                                                 >
-                                                    <Trash2 size={14} />
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
                                 );
                             })
                         )}
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
             </div>
         </div>
     );

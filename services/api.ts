@@ -25,6 +25,7 @@ export interface Medicine {
   srlNo: number;
   name: string;
   image?: string;
+  description?: string;
   barcode: string;
   productCode: string;
   strength: string;
