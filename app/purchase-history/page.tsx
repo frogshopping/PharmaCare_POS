@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Invoice, getDummyPurchaseHistory } from '@/services/purchaseDummyData';
 import InvoiceDetailModal from '@/components/medicine-rack/InvoiceDetailModal';
+import AddPurchaseModal from '@/components/purchase-history/AddPurchaseModal';
 
 export default function PurchaseHistoryPage() {
     const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -15,6 +16,8 @@ export default function PurchaseHistoryPage() {
     useEffect(() => {
         setInvoices(getDummyPurchaseHistory());
     }, []);
+
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
     // Summary Calculations
     const totalAmount = invoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
@@ -37,7 +40,10 @@ export default function PurchaseHistoryPage() {
                             </h1>
                             <p className="text-slate-500 mt-1 ml-12">Manage and track your pharmaceutical purchases</p>
                         </div>
-                        <Button className="bg-green-600 hover:bg-green-700 text-white gap-2 shadow-sm">
+                        <Button
+                            className="bg-green-600 hover:bg-green-700 text-white gap-2 shadow-sm"
+                            onClick={() => setIsAddModalOpen(true)}
+                        >
                             <Plus size={18} /> Add New Purchase
                         </Button>
                     </div>
@@ -155,6 +161,12 @@ export default function PurchaseHistoryPage() {
                         onBack={() => setSelectedInvoice(null)}
                     />
                 )}
+
+                {/* Add Purchase Modal */}
+                <AddPurchaseModal
+                    isOpen={isAddModalOpen}
+                    onClose={() => setIsAddModalOpen(false)}
+                />
             </div>
         </DashboardLayout>
     );
