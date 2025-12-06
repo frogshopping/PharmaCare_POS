@@ -14,7 +14,8 @@ import {
     Layers,
     DollarSign,
     HelpCircle,
-    LogOut
+    LogOut,
+    ShoppingBag
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -24,6 +25,7 @@ const Sidebar = () => {
         { icon: LayoutDashboard, label: 'Dashboard', href: '/' },
         { icon: Package, label: 'Inventory', href: '/inventory' },
         { icon: Database, label: 'Medicine Rack', href: '/medicine-rack' },
+        { icon: ShoppingBag, label: 'Purchase History', href: '/purchase-history' },
         { icon: ShoppingCart, label: 'Sales', href: '/sales' },
         { icon: Users, label: 'Customers', href: '/customers' },
         { icon: BarChart3, label: 'Reports', href: '/reports' },
@@ -55,8 +57,8 @@ const Sidebar = () => {
                                 key={index}
                                 href={item.href}
                                 className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group ${isActive
-                                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
-                                        : 'hover:bg-slate-800 hover:text-white text-slate-400'
+                                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
+                                    : 'hover:bg-slate-800 hover:text-white text-slate-400'
                                     }`}
                             >
                                 <item.icon size={20} className={`${isActive ? 'text-white' : 'text-slate-500 group-hover:text-white'}`} />
