@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
-import { POSModal } from '@/components/pos/POSModal';
 import { getSalesHistory, Sale } from '@/services/mockSalesData';
 import {
     ShoppingCart,
@@ -20,11 +19,12 @@ import {
     MoreHorizontal
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { useRouter } from 'next/navigation';
 
 export default function SalesPage() {
+    const router = useRouter();
     const [sales, setSales] = useState<Sale[]>([]);
     const [loading, setLoading] = useState(true);
-    const [isPOSOpen, setIsPOSOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
@@ -77,7 +77,7 @@ export default function SalesPage() {
                         </div>
                         <Button
                             className="gap-2 shadow-lg shadow-blue-600/20 bg-blue-600 hover:bg-blue-700 text-white"
-                            onClick={() => setIsPOSOpen(true)}
+                            onClick={() => router.push('/sales/create')}
                         >
                             <Plus size={18} />
                             New Sale
@@ -220,8 +220,6 @@ export default function SalesPage() {
                     </div>
                 </div>
 
-                {/* POS Modal integration */}
-                <POSModal isOpen={isPOSOpen} onClose={() => setIsPOSOpen(false)} />
             </div>
         </DashboardLayout>
     );

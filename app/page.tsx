@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import RightSidebar from '@/components/layout/RightSidebar'
 import DashboardStatCard from '@/components/dashboard/DashboardStatCard'
@@ -13,15 +14,14 @@ import SlowMovingItemsCard from '@/components/dashboard/SlowMovingItemsCard'
 import RecentSalesTable from '@/components/dashboard/RecentSalesTable'
 import PurchaseOrdersTable from '@/components/dashboard/PurchaseOrdersTable'
 import { getMockDashboardData, DashboardData } from '@/services/mockDashboardData'
-import { POSModal } from '@/components/pos/POSModal'
 import { ProductFormModal } from '@/components/inventory/ProductFormModal'
 import { AddCustomerModal } from '@/components/customers/AddCustomerModal'
 
 export default function Home() {
+    const router = useRouter();
     const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [isPOSOpen, setIsPOSOpen] = useState(false);
     const [isAddProductOpen, setIsAddProductOpen] = useState(false);
     const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
 
@@ -194,14 +194,13 @@ export default function Home() {
 
                 {/* Right Sidebar */}
                 <RightSidebar
-                    onNewSale={() => setIsPOSOpen(true)}
+                    onNewSale={() => router.push('/sales/create')}
                     onAddProduct={() => setIsAddProductOpen(true)}
                     onNewCustomer={() => setIsAddCustomerOpen(true)}
                     onGenerateReport={() => console.log('Generate Report clicked')}
                 />
             </div>
 
-            <POSModal isOpen={isPOSOpen} onClose={() => setIsPOSOpen(false)} />
             <ProductFormModal
                 isOpen={isAddProductOpen}
                 onClose={() => setIsAddProductOpen(false)}

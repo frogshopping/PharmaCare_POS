@@ -44,52 +44,52 @@ export default function MedicineTable({
             <table className="w-full text-left border-collapse">
                 <thead className="bg-slate-50/50 border-b border-slate-200">
                     <tr>
-                        <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Product Info</th>
-                        <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Type / Location</th>
-                        <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Pricing</th>
-                        <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Stock</th>
-                        <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Batch / Expiry</th>
-                        <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+                        <th className="px-3 py-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Product Info</th>
+                        <th className="px-3 py-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Type / Location</th>
+                        <th className="px-3 py-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Pricing</th>
+                        <th className="px-3 py-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Stock</th>
+                        <th className="px-3 py-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Batch / Expiry</th>
+                        <th className="px-3 py-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                     {medicines.map((medicine) => (
                         <tr
                             key={medicine.id}
-                            className="hover:bg-slate-50/80 transition-colors group cursor-pointer"
+                            className="hover:bg-slate-50/80 transition-colors group cursor-pointer text-xs"
                             onClick={() => onViewDetails?.(medicine)} // Row click opens details
                         >
-                            <td className="px-6 py-4 align-top">
+                            <td className="px-3 py-2 align-top">
                                 <div className="font-bold text-slate-700">{medicine.name}</div>
-                                <div className="text-xs text-slate-500 mt-0.5">{medicine.strength || 'N/A'} • {medicine.manufacture || 'Unknown Manufacturer'}</div>
-                                <div className="text-[10px] text-slate-400 font-mono mt-1">Code: {medicine.productCode}</div>
+                                <div className="text-[10px] text-slate-500 mt-0.5">{medicine.strength || 'N/A'} • {medicine.manufacture || 'Unknown Manufacturer'}</div>
+                                <div className="text-[10px] text-slate-400 font-mono mt-0.5">Code: {medicine.productCode}</div>
                             </td>
-                            <td className="px-6 py-4 align-top">
-                                <div className="flex items-center gap-2 mb-1">
+                            <td className="px-3 py-2 align-top">
+                                <div className="flex items-center gap-1.5 mb-0.5">
                                     {getTypeIcon(medicine.type)}
-                                    <span className="text-sm text-slate-600">{medicine.type || 'Tablet'}</span>
+                                    <span className="text-xs text-slate-600">{medicine.type || 'Tablet'}</span>
                                 </div>
-                                <div className="inline-flex items-center px-1.5 py-0.5 rounded border border-slate-200 bg-slate-50 text-[10px] font-medium text-slate-500">
+                                <div className="inline-flex items-center px-1.5 py-0 rounded border border-slate-200 bg-slate-50 text-[10px] font-medium text-slate-500">
                                     {medicine.rackLocation || medicine.rackNo || 'Unassigned'}
                                 </div>
                             </td>
-                            <td className="px-6 py-4 align-top">
-                                <div className="text-sm font-semibold text-slate-700">৳{medicine.price}</div>
-                                <div className="text-xs text-slate-500">Buy: ৳{medicine.buyingPrice ? medicine.buyingPrice.toFixed(2) : '-'}</div>
+                            <td className="px-3 py-2 align-top">
+                                <div className="text-xs font-semibold text-slate-700">৳{medicine.price}</div>
+                                <div className="text-[10px] text-slate-500">Buy: ৳{medicine.buyingPrice ? medicine.buyingPrice.toFixed(2) : '-'}</div>
                             </td>
-                            <td className="px-6 py-4 align-top">
-                                <div className={`inline-flex items-center px-2 py-1 rounded-md border text-xs font-bold ${medicine.inStock === 0 ? 'bg-red-50 text-red-700 border-red-100' :
+                            <td className="px-3 py-2 align-top">
+                                <div className={`inline-flex items-center px-1.5 py-0.5 rounded-md border text-[10px] font-bold ${medicine.inStock === 0 ? 'bg-red-50 text-red-700 border-red-100' :
                                     medicine.inStock < 20 ? 'bg-amber-50 text-amber-700 border-amber-100' :
                                         'bg-emerald-50 text-emerald-700 border-emerald-100'
                                     }`}>
                                     {medicine.inStock} units
                                 </div>
                             </td>
-                            <td className="px-6 py-4 align-top">
-                                <div className="text-sm font-mono text-slate-600">{medicine.batchId || 'N/A'}</div>
-                                <div className="text-xs text-slate-500 mt-0.5">Exp: {medicine.expiryDate || 'N/A'}</div>
+                            <td className="px-3 py-2 align-top">
+                                <div className="text-xs font-mono text-slate-600">{medicine.batchId || 'N/A'}</div>
+                                <div className="text-[10px] text-slate-500 mt-0.5">Exp: {medicine.expiryDate || 'N/A'}</div>
                             </td>
-                            <td className="px-6 py-4 text-right">
+                            <td className="px-3 py-2 text-right">
                                 <div className="flex justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
                                     <Button
                                         size="icon"

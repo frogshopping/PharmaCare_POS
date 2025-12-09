@@ -62,7 +62,7 @@ export default function InventoryPage() {
     const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(null); // For list view - now uses Medicine type directly
 
 
-    const itemsPerPage = 10;
+    const itemsPerPage = 20;
 
     // === Data Fetching ===
     const fetchData = async () => {
@@ -231,77 +231,77 @@ export default function InventoryPage() {
             <div className="flex-1 flex flex-col h-full bg-slate-50 overflow-hidden relative">
 
                 {/* === Unified Header === */}
-                <div className="px-8 py-8 bg-white border-b border-slate-200">
-                    <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="px-6 py-4 bg-white border-b border-slate-200">
+                    <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
-                            <h1 className="text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-3">
-                                <div className="p-2 bg-blue-600 rounded-lg shadow-lg shadow-blue-600/20 text-white">
-                                    <Box size={24} />
+                            <h1 className="text-xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
+                                <div className="p-1.5 bg-blue-600 rounded-lg shadow-lg shadow-blue-600/20 text-white">
+                                    <Box size={20} />
                                 </div>
                                 Inventory Management
                             </h1>
-                            <p className="text-slate-500 mt-1 ml-12">Track stock, pricing, and organized racks</p>
+                            <p className="text-slate-500 text-xs mt-0.5 ml-9">Track stock, pricing, and organized racks</p>
                         </div>
                         <div className="flex items-center gap-2">
                             <Button
                                 variant="outline"
-                                className="bg-white text-slate-600 border-slate-200 gap-2 shadow-sm"
+                                className="bg-white text-slate-600 border-slate-200 gap-2 shadow-sm h-8 text-xs"
                                 onClick={() => setIsLegendOpen(true)}
                             >
-                                <HelpCircle size={18} /> Icon Guide
+                                <HelpCircle size={14} /> Icon Guide
                             </Button>
                             <Button
-                                className="bg-blue-600 hover:bg-blue-700 text-white gap-2 shadow-sm"
+                                className="bg-blue-600 hover:bg-blue-700 text-white gap-2 shadow-sm h-8 text-xs"
                                 onClick={() => setIsAddProductOpen(true)}
                             >
-                                <Plus size={18} /> Add Product
+                                <Plus size={14} /> Add Product
                             </Button>
                         </div>
                     </div>
 
                     {/* === Stats (Universal) === */}
-                    <div className="max-w-[1600px] mx-auto mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between group hover:border-blue-300 transition-colors">
+                    <div className="max-w-[1600px] mx-auto mt-4 grid grid-cols-1 md:grid-cols-4 gap-3">
+                        <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between group hover:border-blue-300 transition-colors">
                             <div>
-                                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Products</p>
-                                <h3 className="text-2xl font-bold text-slate-800 mt-1">{stats.total}</h3>
+                                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Total Products</p>
+                                <h3 className="text-xl font-bold text-slate-800 mt-0.5">{stats.total}</h3>
                             </div>
-                            <div className="p-3 bg-slate-50 text-slate-400 rounded-lg group-hover:text-blue-600 group-hover:bg-blue-50 transition-colors">
-                                <Package size={20} />
+                            <div className="p-2 bg-slate-50 text-slate-400 rounded-lg group-hover:text-blue-600 group-hover:bg-blue-50 transition-colors">
+                                <Package size={18} />
                             </div>
                         </div>
-                        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between group hover:border-emerald-300 transition-colors">
+                        <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between group hover:border-emerald-300 transition-colors">
                             <div>
-                                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">In Stock</p>
-                                <h3 className="text-2xl font-bold text-slate-800 mt-1">{stats.goodStock}</h3>
+                                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">In Stock</p>
+                                <h3 className="text-xl font-bold text-slate-800 mt-0.5">{stats.goodStock}</h3>
                             </div>
-                            <div className="p-3 bg-slate-50 text-slate-400 rounded-lg group-hover:text-emerald-600 group-hover:bg-emerald-50 transition-colors">
-                                <CheckCircle2 size={20} />
+                            <div className="p-2 bg-slate-50 text-slate-400 rounded-lg group-hover:text-emerald-600 group-hover:bg-emerald-50 transition-colors">
+                                <CheckCircle2 size={18} />
                             </div>
                         </div>
-                        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between group hover:border-amber-300 transition-colors">
+                        <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between group hover:border-amber-300 transition-colors">
                             <div>
-                                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Low Stock</p>
-                                <h3 className="text-2xl font-bold text-slate-800 mt-1">{stats.lowStock}</h3>
+                                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Low Stock</p>
+                                <h3 className="text-xl font-bold text-slate-800 mt-0.5">{stats.lowStock}</h3>
                             </div>
-                            <div className="p-3 bg-slate-50 text-slate-400 rounded-lg group-hover:text-amber-600 group-hover:bg-amber-50 transition-colors">
-                                <AlertCircle size={20} />
+                            <div className="p-2 bg-slate-50 text-slate-400 rounded-lg group-hover:text-amber-600 group-hover:bg-amber-50 transition-colors">
+                                <AlertCircle size={18} />
                             </div>
                         </div>
-                        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between group hover:border-red-300 transition-colors">
+                        <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between group hover:border-red-300 transition-colors">
                             <div>
-                                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Out of Stock</p>
-                                <h3 className="text-2xl font-bold text-slate-800 mt-1">{stats.outOfStock}</h3>
+                                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Out of Stock</p>
+                                <h3 className="text-xl font-bold text-slate-800 mt-0.5">{stats.outOfStock}</h3>
                             </div>
-                            <div className="p-3 bg-slate-50 text-slate-400 rounded-lg group-hover:text-red-600 group-hover:bg-red-50 transition-colors">
-                                <AlertTriangle size={20} />
+                            <div className="p-2 bg-slate-50 text-slate-400 rounded-lg group-hover:text-red-600 group-hover:bg-red-50 transition-colors">
+                                <AlertTriangle size={18} />
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* === Unified Toolbar === */}
-                <div className="px-8 py-6">
+                <div className="px-6 py-4">
                     <div className="max-w-[1600px] mx-auto bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap gap-4 items-end">
 
 
