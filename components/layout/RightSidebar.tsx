@@ -1,19 +1,21 @@
 'use client';
 
 import React from 'react';
-import { ShoppingCart, Plus, UserPlus, FileText, AlertCircle, CheckCircle, Info } from 'lucide-react';
-
-interface Notification {
-    id: string;
-    title: string;
-    message: string;
-    time: string;
-    type: 'alert' | 'info' | 'success';
-    read: boolean;
-}
+import {
+    ShoppingCart,
+    Plus,
+    UserPlus,
+    TrendingUp,
+    AlertTriangle,
+    Clock,
+    Package,
+    DollarSign,
+    Activity,
+    Bell,
+    ChevronRight
+} from 'lucide-react';
 
 interface RightSidebarProps {
-    notifications?: Notification[];
     onNewSale?: () => void;
     onAddProduct?: () => void;
     onNewCustomer?: () => void;
@@ -21,110 +23,163 @@ interface RightSidebarProps {
 }
 
 const RightSidebar: React.FC<RightSidebarProps> = ({
-    notifications = [],
     onNewSale,
     onAddProduct,
     onNewCustomer,
     onGenerateReport
 }) => {
-    const unreadCount = notifications.filter(n => !n.read).length;
+    // Mock data for demonstration - in real app, pass these as props or fetch from context
+    const quickStats = [
+        { label: "Today's Sales", value: "$1,245", trend: "+12%", icon: DollarSign, color: "text-green-600", bg: "bg-green-50" },
+        { label: "Active Orders", value: "23", trend: "+5", icon: ShoppingCart, color: "text-blue-600", bg: "bg-blue-50" },
+        { label: "Low Stock", value: "8", trend: "alert", icon: AlertTriangle, color: "text-orange-600", bg: "bg-orange-50" },
+    ];
 
-    const getNotificationIcon = (type: string) => {
-        switch (type) {
-            case 'alert':
-                return <AlertCircle size={16} className="text-orange-400" />;
-            case 'success':
-                return <CheckCircle size={16} className="text-green-400" />;
-            case 'info':
-                return <Info size={16} className="text-blue-400" />;
-            default:
-                return <Info size={16} className="text-slate-400" />;
-        }
-    };
+    const recentActivity = [
+        { action: "New sale", detail: "$45.50 - John Doe", time: "2m ago", icon: ShoppingCart, color: "text-green-600" },
+        { action: "Product added", detail: "Paracetamol 500mg", time: "15m ago", icon: Plus, color: "text-blue-600" },
+        { action: "Low stock alert", detail: "Aspirin running low", time: "1h ago", icon: AlertTriangle, color: "text-orange-600" },
+        { action: "New customer", detail: "Sarah Johnson", time: "2h ago", icon: UserPlus, color: "text-purple-600" },
+    ];
+
+    const urgentAlerts = [
+        { type: "expiring", message: "5 products expire in 7 days", priority: "medium" },
+        { type: "stock", message: "8 products low on stock", priority: "high" },
+    ];
 
     return (
-        <div className="w-80 bg-white border-l border-slate-200 h-screen flex flex-col overflow-hidden shrink-0">
+        <div className="hidden xl:flex w-80 bg-gradient-to-b from-slate-50 to-white border-l border-slate-200 h-screen flex-col overflow-hidden shrink-0">
             {/* Quick Actions Section */}
-            <div className="p-6 border-b border-slate-200">
-                <h3 className="text-sm font-semibold text-slate-700 mb-4 uppercase tracking-wide">Quick Actions</h3>
-                <div className="space-y-3">
+            <div className="p-5 border-b border-slate-200 bg-white">
+                <h3 className="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wider flex items-center gap-2">
+                    <Activity size={14} />
+                    Quick Actions
+                </h3>
+                <div className="space-y-2">
                     <button
                         onClick={onNewSale}
-                        className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-xl font-medium hover:from-blue-700 hover:to-blue-800 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20"
+                        className="w-full group relative bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2.5 px-4 rounded-xl font-medium hover:from-blue-700 hover:to-blue-800 transition-all flex items-center justify-between gap-2 shadow-md hover:shadow-lg shadow-blue-600/20 hover:scale-[1.02] transform"
                     >
-                        <ShoppingCart size={18} />
-                        New Sale
+                        <span className="flex items-center gap-2">
+                            <ShoppingCart size={16} />
+                            <span className="text-sm">New Sale</span>
+                        </span>
+                        <ChevronRight size={14} className="opacity-70 group-hover:translate-x-0.5 transition-transform" />
                     </button>
-                    <button
-                        onClick={onAddProduct}
-                        className="w-full bg-slate-100 text-slate-700 py-3 px-4 rounded-xl font-medium hover:bg-slate-200 transition-all flex items-center justify-center gap-2"
-                    >
-                        <Plus size={18} />
-                        Add Product
-                    </button>
-                    <button
-                        onClick={onNewCustomer}
-                        className="w-full bg-slate-100 text-slate-700 py-3 px-4 rounded-xl font-medium hover:bg-slate-200 transition-all flex items-center justify-center gap-2"
-                    >
-                        <UserPlus size={18} />
-                        New Customer
-                    </button>
-                    <button
-                        onClick={onGenerateReport}
-                        className="w-full bg-slate-100 text-slate-700 py-3 px-4 rounded-xl font-medium hover:bg-slate-200 transition-all flex items-center justify-center gap-2"
-                    >
-                        <FileText size={18} />
-                        Generate Report
-                    </button>
+
+                    <div className="grid grid-cols-2 gap-2">
+                        <button
+                            onClick={onAddProduct}
+                            className="bg-white border border-slate-200 text-slate-700 py-2 px-3 rounded-lg font-medium hover:border-slate-300 hover:bg-slate-50 transition-all flex items-center justify-center gap-1.5 hover:scale-[1.02] transform text-xs"
+                        >
+                            <Plus size={14} />
+                            <span>Product</span>
+                        </button>
+                        <button
+                            onClick={onNewCustomer}
+                            className="bg-white border border-slate-200 text-slate-700 py-2 px-3 rounded-lg font-medium hover:border-slate-300 hover:bg-slate-50 transition-all flex items-center justify-center gap-1.5 hover:scale-[1.02] transform text-xs"
+                        >
+                            <UserPlus size={14} />
+                            <span>Customer</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            {/* Notifications Section */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar">
-                <div className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Notifications</h3>
-                        {unreadCount > 0 && (
-                            <span className="bg-red-500 text-white text-xs font-semibold px-2.5 py-1 rounded-full">
-                                {unreadCount}
-                            </span>
-                        )}
-                    </div>
-                    <div className="space-y-3">
-                        {notifications.length === 0 ? (
-                            <div className="text-center py-8">
-                                <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                                    <Info size={24} className="text-slate-400" />
+            {/* Quick Stats */}
+            <div className="p-5 border-b border-slate-200 bg-white">
+                <h3 className="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wider flex items-center gap-2">
+                    <TrendingUp size={14} />
+                    Quick Stats
+                </h3>
+                <div className="space-y-2">
+                    {quickStats.map((stat, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-br from-slate-50 to-white border border-slate-100 hover:border-slate-200 transition-all">
+                            <div className="flex items-center gap-3">
+                                <div className={`${stat.bg} ${stat.color} p-2 rounded-lg`}>
+                                    <stat.icon size={16} />
                                 </div>
-                                <p className="text-sm text-slate-500">No notifications</p>
+                                <div>
+                                    <p className="text-xs text-slate-500 font-medium">{stat.label}</p>
+                                    <p className="text-lg font-bold text-slate-800">{stat.value}</p>
+                                </div>
                             </div>
-                        ) : (
-                            notifications.map((notification) => (
-                                <div
-                                    key={notification.id}
-                                    className={`p-4 rounded-xl border transition-all hover:shadow-md ${!notification.read
-                                            ? 'bg-blue-50 border-blue-200'
-                                            : 'bg-slate-50 border-slate-200'
-                                        }`}
-                                >
-                                    <div className="flex items-start gap-3">
-                                        <div className="mt-0.5">
-                                            {getNotificationIcon(notification.type)}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-semibold text-slate-800">{notification.title}</p>
-                                            <p className="text-xs text-slate-600 mt-1 line-clamp-2">{notification.message}</p>
-                                            <p className="text-xs text-slate-400 mt-2">{notification.time}</p>
-                                        </div>
-                                        {!notification.read && (
-                                            <div className="w-2 h-2 bg-blue-500 rounded-full mt-1.5"></div>
-                                        )}
-                                    </div>
-                                </div>
-                            ))
-                        )}
-                    </div>
+                            <div className={`text-xs font-semibold ${stat.trend === 'alert' ? 'text-orange-600' : 'text-green-600'}`}>
+                                {stat.trend}
+                            </div>
+                        </div>
+                    ))}
                 </div>
+            </div>
+
+            {/* Urgent Alerts */}
+            <div className="p-5 border-b border-slate-200">
+                <h3 className="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wider flex items-center gap-2">
+                    <Bell size={14} />
+                    Alerts
+                </h3>
+                <div className="space-y-2">
+                    {urgentAlerts.map((alert, idx) => (
+                        <div
+                            key={idx}
+                            className={`p-3 rounded-xl border-l-4 ${alert.priority === 'high'
+                                    ? 'bg-red-50 border-red-500'
+                                    : 'bg-orange-50 border-orange-500'
+                                } hover:shadow-sm transition-all cursor-pointer`}
+                        >
+                            <div className="flex items-start gap-2">
+                                <AlertTriangle
+                                    size={14}
+                                    className={alert.priority === 'high' ? 'text-red-600 mt-0.5' : 'text-orange-600 mt-0.5'}
+                                />
+                                <p className={`text-xs font-medium ${alert.priority === 'high' ? 'text-red-900' : 'text-orange-900'
+                                    }`}>
+                                    {alert.message}
+                                </p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Recent Activity Feed */}
+            <div className="flex-1 overflow-hidden flex flex-col">
+                <div className="p-5 border-b border-slate-200">
+                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                        <Clock size={14} />
+                        Recent Activity
+                    </h3>
+                </div>
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-3">
+                    {recentActivity.map((activity, idx) => (
+                        <div
+                            key={idx}
+                            className="flex items-start gap-3 p-3 rounded-lg hover:bg-white hover:shadow-sm transition-all cursor-pointer border border-transparent hover:border-slate-200"
+                        >
+                            <div className={`${activity.color} bg-slate-50 p-1.5 rounded-lg mt-0.5`}>
+                                <activity.icon size={12} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-xs font-semibold text-slate-800 truncate">
+                                    {activity.action}
+                                </p>
+                                <p className="text-xs text-slate-500 truncate">
+                                    {activity.detail}
+                                </p>
+                            </div>
+                            <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap">
+                                {activity.time}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Footer with timestamp */}
+            <div className="p-4 bg-gradient-to-r from-slate-100 to-slate-50 border-t border-slate-200">
+                <p className="text-[10px] text-slate-500 text-center font-medium">
+                    Last updated: {new Date().toLocaleTimeString()}
+                </p>
             </div>
         </div>
     );

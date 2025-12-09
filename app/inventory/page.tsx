@@ -5,8 +5,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import MedicineTable from '@/components/catalog/MedicineTable';
 import Pagination from '@/components/catalog/Pagination';
 import { Medicine, getMedicines, deleteMedicine } from '@/services/api';
-import { AddProductModal } from '@/components/inventory/AddProductModal';
-import { EditProductModal } from '@/components/inventory/EditProductModal';
+import { ProductFormModal } from '@/components/inventory/ProductFormModal';
 import {
     Search,
     Plus,
@@ -59,8 +58,8 @@ export default function InventoryPage() {
     // === Rack View State ===
     const [rackData, setRackData] = useState<DummyRackCategory[]>([]);
     const [selectedCategory, setSelectedCategory] = useState<DummyRackCategory | null>(null);
-    const [selectedMedicine, setSelectedMedicine] = useState<DummyMedicine | null>(null); // Shared for both views now?
-    const [selectedListMedicine, setSelectedListMedicine] = useState<Medicine | null>(null); // Type safe for list
+    const [selectedRackMedicine, setSelectedRackMedicine] = useState<DummyMedicine | null>(null); // For rack view
+    const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(null); // For list view - now uses Medicine type directly
 
 
     const itemsPerPage = 10;
@@ -190,34 +189,37 @@ export default function InventoryPage() {
     // Handler for Rack Grid Items (DummyMedicine type)
     const handleRackMedicineClick = (medicine: DummyMedicine) => {
         setSelectedCategory(null);
-        // Convert DummyMedicine to internal structure for modal if needed, or pass transparently
-        // Since both modals might use similar structure, we might need to unify the types or props.
-        // For now, MedicineDetailsModal uses `DummyMedicine` compatible props mostly.
-        setTimeout(() => setSelectedMedicine(medicine), 100);
+        // Convert DummyMedicine to Medicine format for the unified modal
+        const mappedMed: Medicine = {
+            id: `rack-${Date.now()}`,
+            srlNo: 0,
+            name: medicine.name,
+            barcode: '',
+            productCode: medicine.productCode,
+            strength: medicine.strength,
+            manufacture: medicine.manufacturer,
+            genericName: medicine.genericName,
+            price: medicine.sellingPrice,
+            buyingPrice: medicine.tradePrice,
+            vat: 0,
+            rackNo: '',
+            totalPurchase: 0,
+            totalSold: 0,
+            inStock: medicine.inStock,
+            stockStatus: medicine.inStock === 0 ? 'Low Stock' : medicine.inStock < 20 ? 'Stock Alert' : 'Normal',
+            type: medicine.type,
+            expiryDate: medicine.expiryDate,
+            batchId: medicine.batchId,
+            supplier: medicine.supplier,
+            purchaseDate: medicine.purchaseDate,
+        };
+        setTimeout(() => setSelectedMedicine(mappedMed), 100);
     };
 
     // Handler for Inventory List Items (Medicine type from API)
     const handleListMedicineView = (medicine: Medicine) => {
-        // Convert API Medicine to DummyMedicine format for the shared Modal
-        // or update Modal to accept both.
-        // Let's simpler: Map API Medicine to DummyMedicine structure on the fly
-        const mappedMed: DummyMedicine = {
-            name: medicine.name,
-            strength: medicine.strength,
-            manufacturer: medicine.manufacture, // Note: manufacture vs manufacturer
-            type: medicine.type || 'Tablet',
-            genericName: medicine.genericName,
-            productCode: medicine.productCode,
-            tradePrice: medicine.price * 0.8, // Estimate if missing
-            sellingPrice: medicine.price,
-            wholesalePrice: medicine.price * 0.7, // Estimate
-            inStock: medicine.inStock,
-            purchaseDate: medicine.purchaseDate || 'N/A',
-            expiryDate: medicine.expiryDate || 'N/A',
-            batchId: medicine.batchId || 'N/A',
-            supplier: medicine.supplier || 'N/A',
-        };
-        setSelectedMedicine(mappedMed);
+        // Directly use the Medicine type - no conversion needed
+        setSelectedMedicine(medicine);
     };
 
 
@@ -302,29 +304,6 @@ export default function InventoryPage() {
                 <div className="px-8 py-6">
                     <div className="max-w-[1600px] mx-auto bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap gap-4 items-end">
 
-                        {/* View Switcher Toggle */}
-                        <div className="flex items-center p-1 bg-slate-100 rounded-lg border border-slate-200">
-                            <button
-                                onClick={() => setViewMode('list')}
-                                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all ${viewMode === 'list'
-                                        ? 'bg-white text-blue-600 shadow-sm'
-                                        : 'text-slate-500 hover:text-slate-700'
-                                    }`}
-                            >
-                                <List size={16} /> List
-                            </button>
-                            <button
-                                onClick={() => setViewMode('rack')}
-                                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all ${viewMode === 'rack'
-                                        ? 'bg-white text-blue-600 shadow-sm'
-                                        : 'text-slate-500 hover:text-slate-700'
-                                    }`}
-                            >
-                                <Grid size={16} /> Racks
-                            </button>
-                        </div>
-
-                        <div className="w-px h-10 bg-slate-200 mx-2 hidden md:block"></div>
 
                         {/* Search (Universal) */}
                         <div className="space-y-1.5 flex-1 min-w-[250px]">
@@ -492,16 +471,16 @@ export default function InventoryPage() {
                 </div>
 
                 {/* Modals */}
-                <AddProductModal
+                <ProductFormModal
                     isOpen={isAddProductOpen}
                     onClose={() => setIsAddProductOpen(false)}
                     onSuccess={handleAddSuccess}
                 />
-                <EditProductModal
-                    isOpen={isEditProductOpen}
-                    onClose={() => setIsEditProductOpen(false)}
-                    product={editingProduct}
-                    onSuccess={handleEditSuccess}
+                <ProductFormModal
+                    isOpen={editingProduct !== null}
+                    onClose={() => setEditingProduct(null)}
+                    onSuccess={handleAddSuccess}
+                    item={editingProduct!}
                 />
                 {/* Rack Modals */}
                 <RackDetailModal

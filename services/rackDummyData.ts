@@ -17,9 +17,11 @@ export interface DummyMedicine {
 }
 
 export interface DummyRackCategory {
-    id: number;
+    id: number | string;
     title: string;
     medicines: DummyMedicine[];
+    count: number;
+    location?: string;
 }
 
 const getRandomDate = (start: Date, end: Date) => {
@@ -51,6 +53,7 @@ export const getDummyRackData = (): DummyRackCategory[] => {
         {
             id: 1,
             title: "Pain Management",
+            count: 10,
             medicines: [
                 generateMedicine("A-Calm", "50 mg", "The ACME Laboratories Ltd.", 'Tablet'),
                 generateMedicine("Alkanon", "50 mg", "Renata Limited", 'Tablet'),
@@ -67,6 +70,7 @@ export const getDummyRackData = (): DummyRackCategory[] => {
         {
             id: 2,
             title: "Cardiac",
+            count: 5,
             medicines: [
                 generateMedicine("Abetis", "40 mg", "ACI Limited", 'Tablet'),
                 generateMedicine("Acecard", "2.5 mg", "Healthcare Pharmaceuticals Ltd.", 'Tablet'),
@@ -78,6 +82,7 @@ export const getDummyRackData = (): DummyRackCategory[] => {
         {
             id: 3,
             title: "Antibiotic",
+            count: 7,
             medicines: [
                 generateMedicine("Azithrocin", "500 mg", "Square Pharmaceuticals Ltd.", 'Tablet'),
                 generateMedicine("Zimax", "500 mg", "Square Pharmaceuticals Ltd.", 'Capsule'),
@@ -91,6 +96,7 @@ export const getDummyRackData = (): DummyRackCategory[] => {
         {
             id: 4,
             title: "Vitamin",
+            count: 7,
             medicines: [
                 generateMedicine("Aristovit B", "200 ml", "Aristopharma Ltd.", 'Syrup'),
                 generateMedicine("B-50 Forte", "100 mg", "Square Pharmaceuticals Ltd.", 'Tablet'),
@@ -104,6 +110,7 @@ export const getDummyRackData = (): DummyRackCategory[] => {
         {
             id: 5,
             title: "Respiratory",
+            count: 6,
             medicines: [
                 generateMedicine("Antazol", "0.1%", "Square Pharmaceuticals Ltd.", 'Suspension'), // Nasal drops usually but mapped to Susp for dummy
                 generateMedicine("Avil", "25 mg", "Sanofi Bangladesh Ltd.", 'Tablet'),

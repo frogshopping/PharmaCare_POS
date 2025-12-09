@@ -1,0 +1,313 @@
+// ============================================
+// CENTRALIZED TYPE DEFINITIONS
+// This file contains all shared types for the application
+// ============================================
+
+// ============================================
+// CORE ENTITIES
+// ============================================
+
+export interface DashboardStats {
+    totalPurchase: number;
+    monthlyPurchase: number;
+    todaysPurchase: number;
+    totalSales: number;
+    todaysDiscount: number;
+    todaysDiscountPercentage: number;
+    monthlyDiscount: number;
+    monthlyDiscountPercentage: number;
+    todaysRevenue: number;
+    monthlyRevenue: number;
+    todaysProfitPercentage: number;
+    monthlyProfitPercentage: number;
+    todaysExpense: number;
+    monthlyExpense: number;
+    assetInStore: number;
+    assetInStoreValue: number;
+    assetCost: number;
+    currentValue: number;
+}
+
+export interface Medicine {
+    id: string;
+    srlNo: number;
+    name: string;
+    image?: string;
+    description?: string;
+    barcode: string;
+    productCode: string;
+    strength: string;
+    manufacture: string;
+    genericName: string;
+    price: number;
+    mrp?: number; // Maximum Retail Price
+    discount?: number; // Discount percentage
+    vat: number;
+    rackNo: string;
+    totalPurchase: number;
+    totalSold: number;
+    inStock: number;
+    stockStatus: 'Low Stock' | 'Stock Alert' | 'Normal';
+    category?: string;
+    expiryDate?: string;
+    type?: 'Tablet' | 'Syrup' | 'Capsule' | 'Injection' | 'Suspension' | 'Cream';
+    rackLocation?: string;
+    batchId?: string;
+    supplier?: string;
+    purchaseDate?: string;
+    buyingPrice?: number;
+    packSize?: {
+        strip: number;
+        box: number;
+    };
+    packPrice?: {
+        strip: number;
+        box: number;
+    };
+    supplierContact?: string;
+}
+
+export interface CategoryGroup {
+    category: string;
+    medicines: Medicine[];
+    count: number;
+}
+
+export interface Category {
+    id: string;
+    number: number;
+    name: string;
+    image?: string;
+    status: 'Active' | 'Inactive';
+}
+
+export interface Subcategory {
+    id: string;
+    number: number;
+    name: string;
+    categoryName: string;
+    image?: string;
+    status: 'Active' | 'Inactive';
+}
+
+export interface ChildCategory {
+    id: string;
+    number: number;
+    name: string;
+    subcategory: string;
+    image?: string;
+    status: 'Active' | 'Inactive';
+}
+
+export interface MedicineType {
+    id: string;
+    number: number;
+    title: string;
+}
+
+export interface BarcodeEntry {
+    id: string;
+    srlNo: number;
+    date: string;
+    ref: string;
+    remarks: string;
+}
+
+export interface Package {
+    id: string;
+    number: number;
+    packageTitle: string;
+    price: number;
+    status: 'Active' | 'Inactive';
+}
+
+export interface Follower {
+    id: string;
+    name: string;
+    phone: string;
+    avatar?: string;
+}
+
+export interface Rack {
+    id: number;
+    name: string;
+    name_en?: string;
+}
+
+export interface GenericName {
+    id: number;
+    name: string;
+}
+
+// ============================================
+// COMMON MODAL PROPS
+// ============================================
+
+export interface BaseModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+}
+
+export interface CreateModalProps extends BaseModalProps {
+    onSuccess: () => void;
+}
+
+export interface EditModalProps<T> extends BaseModalProps {
+    item: T;
+    onSuccess: () => void;
+}
+
+// ============================================
+// FORM STATE TYPE
+// ============================================
+
+export type FormField<T> = {
+    value: T;
+    error?: string;
+    touched?: boolean;
+};
+
+// ============================================
+// API RESPONSE TYPE
+// ============================================
+
+export interface ApiResponse<T> {
+    data?: T;
+    error?: string;
+    success: boolean;
+}
+
+// ============================================
+// CUSTOMER TYPES
+// ============================================
+
+export interface Customer {
+    id: string;
+    name: string;
+    address: string;
+    phone: string;
+    email: string;
+    allergies: string[];
+    loyaltyPoints: number;
+    memberSince: string;
+    avatar?: string;
+}
+
+// ============================================
+// SALES TYPES
+// ============================================
+
+export interface Sale {
+    id: string; // Invoice ID
+    customerName: string;
+    date: string; // ISO date string
+    itemsCount: number;
+    totalAmount: number;
+    paymentMethod: 'Cash' | 'Credit Card' | 'Debit Card' | 'Insurance' | 'Mobile Payment';
+    status: 'Completed' | 'Pending' | 'Refunded' | 'Cancelled';
+}
+
+// ============================================
+// PURCHASE/INVOICE TYPES
+// ============================================
+
+export interface InvoiceItem {
+    id: number;
+    name: string;
+    strength: string;
+    qty: number;
+    unitPrice: number;
+    tradePrice: number;
+    discountPercent: number;
+    vat: number;
+    total: number;
+}
+
+export interface Transaction {
+    date: string;
+    paymentMethod: string;
+    account: string;
+    amount: number;
+    description: string;
+}
+
+export interface Invoice {
+    id: string;
+    purchaseDate: string;
+    pharmaceuticalCompany: string;
+    supplierName: string;
+    supplierContact: string;
+    supplierEmail?: string;
+    items: InvoiceItem[];
+    subtotal: number;
+    vat: number;
+    discount: number;
+    totalAmount: number;
+    paidAmount: number;
+    dueAmount: number;
+    status: 'Paid' | 'Due' | 'Partial' | 'Draft';
+    transactions: Transaction[];
+}
+
+// ============================================
+// RACK TYPES
+// ============================================
+
+export interface DummyMedicine {
+    name: string;
+    strength: string;
+    manufacturer: string;
+    type: 'Tablet' | 'Syrup' | 'Capsule' | 'Injection' | 'Suspension' | 'Cream';
+    genericName: string;
+    productCode: string;
+    tradePrice: number;
+    sellingPrice: number;
+    wholesalePrice: number;
+    inStock: number;
+    purchaseDate: string;
+    expiryDate: string;
+    batchId: string;
+    supplier: string;
+}
+
+export interface DummyRackCategory {
+    id: number | string;
+    title: string;
+    medicines: DummyMedicine[];
+    count: number;
+    location?: string;
+}
+
+// ============================================
+// DASHBOARD DATA TYPE
+// ============================================
+
+export interface DashboardData {
+    summary: {
+        todaysRevenue: { value: string; trend: string; trendDirection: 'up' | 'down' };
+        todaysProfit: { value: string; trend: string; trendDirection: 'up' | 'down' };
+        totalProducts: { value: string; trend: string; trendDirection: 'up' | 'down' };
+        outOfStock: { value: string; status: string };
+        expiringSoon: { value: string; days: number };
+        pendingPayments: { value: string; count: number };
+    };
+    salesTrend: {
+        labels: string[];
+        data: number[];
+    };
+    stockDistribution: {
+        labels: string[];
+        data: number[];
+        colors: string[];
+    };
+    expiryTimeline: {
+        ranges: string[];
+        counts: number[];
+    };
+    lowStockAlerts: Array<{ name: string; stock: number; status: string }>;
+    topSellingItems: Array<{ name: string; price: number; sold: number; trend: string }>;
+    slowMovingItems: Array<{ name: string; stock: number; sold: number }>;
+    recentSales: Array<{ id: string; customerName: string; items: string; amount: number; time: string }>;
+    purchaseOrders: Array<{ id: string; supplier: string; items: number; amount: number; status: string; date: string }>;
+}
+

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Edit2, Trash2, ShoppingCart, Disc, Pill, GlassWater, Syringe, Box } from 'lucide-react';
+import { Edit2, Trash2, Disc, Pill, GlassWater, Syringe, Box } from 'lucide-react';
 import { Medicine } from '@/services/api';
 import { Button } from '@/components/ui/Button';
 
@@ -55,7 +55,7 @@ export default function MedicineTable({
                 <tbody className="divide-y divide-slate-50">
                     {medicines.map((medicine) => (
                         <tr
-                            key={medicine.code || medicine.id}
+                            key={medicine.id}
                             className="hover:bg-slate-50/80 transition-colors group cursor-pointer"
                             onClick={() => onViewDetails?.(medicine)} // Row click opens details
                         >
@@ -79,8 +79,8 @@ export default function MedicineTable({
                             </td>
                             <td className="px-6 py-4 align-top">
                                 <div className={`inline-flex items-center px-2 py-1 rounded-md border text-xs font-bold ${medicine.inStock === 0 ? 'bg-red-50 text-red-700 border-red-100' :
-                                        medicine.inStock < 20 ? 'bg-amber-50 text-amber-700 border-amber-100' :
-                                            'bg-emerald-50 text-emerald-700 border-emerald-100'
+                                    medicine.inStock < 20 ? 'bg-amber-50 text-amber-700 border-amber-100' :
+                                        'bg-emerald-50 text-emerald-700 border-emerald-100'
                                     }`}>
                                     {medicine.inStock} units
                                 </div>

@@ -14,12 +14,13 @@ import RecentSalesTable from '@/components/dashboard/RecentSalesTable'
 import PurchaseOrdersTable from '@/components/dashboard/PurchaseOrdersTable'
 import { getMockDashboardData, DashboardData } from '@/services/mockDashboardData'
 import { POSModal } from '@/components/pos/POSModal'
-import { AddProductModal } from '@/components/inventory/AddProductModal'
+import { ProductFormModal } from '@/components/inventory/ProductFormModal'
 import { AddCustomerModal } from '@/components/customers/AddCustomerModal'
 
 export default function Home() {
     const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [isPOSOpen, setIsPOSOpen] = useState(false);
     const [isAddProductOpen, setIsAddProductOpen] = useState(false);
     const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
@@ -41,10 +42,17 @@ export default function Home() {
         // fetchDashboardData();
 
         // Currently using mock data
-        getMockDashboardData().then((data) => {
-            setDashboardData(data);
-            setLoading(false);
-        });
+        getMockDashboardData()
+            .then((data) => {
+                console.log('Dashboard data fetched:', data);
+                setDashboardData(data);
+                setLoading(false);
+            })
+            .catch(err => {
+                console.error('Failed to load dashboard data:', err);
+                setError('Failed to load dashboard data');
+                setLoading(false);
+            });
     }, []);
 
     if (loading || !dashboardData) {
@@ -186,7 +194,6 @@ export default function Home() {
 
                 {/* Right Sidebar */}
                 <RightSidebar
-                    notifications={dashboardData.notifications}
                     onNewSale={() => setIsPOSOpen(true)}
                     onAddProduct={() => setIsAddProductOpen(true)}
                     onNewCustomer={() => setIsAddCustomerOpen(true)}
@@ -195,7 +202,7 @@ export default function Home() {
             </div>
 
             <POSModal isOpen={isPOSOpen} onClose={() => setIsPOSOpen(false)} />
-            <AddProductModal
+            <ProductFormModal
                 isOpen={isAddProductOpen}
                 onClose={() => setIsAddProductOpen(false)}
                 onSuccess={() => console.log('Product Added')}

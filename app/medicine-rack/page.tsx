@@ -4,19 +4,22 @@ import React, { useState, useMemo, useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import RackCard from '@/components/medicine-rack/RackCard';
 import { getDummyRackData, DummyRackCategory, DummyMedicine } from '@/services/rackDummyData';
-import { Search, Package, Calendar, Filter, FileText, ShoppingBag, Pill, Syringe, GlassWater, Disc, ArrowRight, HelpCircle } from 'lucide-react';
+import { Search, Package, Calendar, Filter, FileText, ShoppingBag, Pill, Syringe, GlassWater, Disc, ArrowRight, HelpCircle, Plus, Edit2 } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import MedicineDetailsModal from '@/components/medicine-rack/MedicineDetailsModal';
 import KeyLegendModal from '@/components/medicine-rack/KeyLegendModal';
+import { AddRackModal } from '@/components/medicine-rack/AddRackModal';
+import { EditRackModal } from '@/components/medicine-rack/EditRackModal';
 
 interface RackDetailModalProps {
     category: DummyRackCategory | null;
     onClose: () => void;
     onMedicineClick: (medicine: DummyMedicine) => void;
+    onEdit: () => void;
 }
 
-const RackDetailModal: React.FC<RackDetailModalProps> = ({ category, onClose, onMedicineClick }) => {
+const RackDetailModal: React.FC<RackDetailModalProps> = ({ category, onClose, onMedicineClick, onEdit }) => {
     if (!category) return null;
 
     // Type icon helper for the list view inside modal
@@ -81,7 +84,14 @@ const RackDetailModal: React.FC<RackDetailModalProps> = ({ category, onClose, on
                         ))}
                     </div>
                 </div>
-                <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+                <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
+                    <Button
+                        variant="outline"
+                        className="gap-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        onClick={onEdit}
+                    >
+                        <Edit2 size={16} /> Edit Rack
+                    </Button>
                     <Button onClick={onClose}>Close</Button>
                 </div>
             </div>
@@ -98,6 +108,9 @@ export default function MedicineRackPage() {
     const [selectedCategory, setSelectedCategory] = useState<DummyRackCategory | null>(null);
     const [selectedMedicine, setSelectedMedicine] = useState<DummyMedicine | null>(null);
     const [isLegendOpen, setIsLegendOpen] = useState(false);
+    const [isAddRackOpen, setIsAddRackOpen] = useState(false);
+    const [isEditRackOpen, setIsEditRackOpen] = useState(false);
+    const [editingRack, setEditingRack] = useState<DummyRackCategory | null>(null);
 
     useEffect(() => {
         // Simulate loading dummy data
@@ -163,8 +176,9 @@ export default function MedicineRackPage() {
                             </Button>
                             <Button
                                 className="bg-blue-600 hover:bg-blue-700 text-white gap-2 shadow-sm hidden md:flex"
+                                onClick={() => setIsAddRackOpen(true)}
                             >
-                                <Package size={18} /> Manage Racks
+                                <Plus size={18} /> Add Rack
                             </Button>
                         </div>
                     </div>
@@ -173,7 +187,7 @@ export default function MedicineRackPage() {
                 {/* Filters Toolbar */}
                 <div className="px-8 py-6">
                     <div className="max-w-[1600px] mx-auto bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap gap-4 items-end">
-                        <div className="space-y-1.5 flex-1 min-w-[300px]">
+                        <div className="space-y-1.5 flex-1 min-w-[300px] max-w-xl">
                             <label className="text-xs font-semibold text-slate-500 uppercase">Search Rack or Medicine</label>
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
@@ -185,18 +199,6 @@ export default function MedicineRackPage() {
                                 />
                             </div>
                         </div>
-                        <div className="space-y-1.5 flex-initial min-w-[200px]">
-                            <label className="text-xs font-semibold text-slate-500 uppercase">Rack Category</label>
-                            <select className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50">
-                                <option>All Categories</option>
-                                <option>Antibiotics</option>
-                                <option>Painkillers</option>
-                                <option>Vitamins</option>
-                            </select>
-                        </div>
-                        <Button variant="outline" size="icon" className="h-10 w-10 shrink-0 border-slate-200 text-slate-500">
-                            <Filter size={18} />
-                        </Button>
                         <Button variant="outline" className="h-10 shrink-0 text-slate-600 gap-2 border-slate-200">
                             <FileText size={16} /> Export List
                         </Button>
@@ -242,6 +244,11 @@ export default function MedicineRackPage() {
                     category={selectedCategory}
                     onClose={() => setSelectedCategory(null)}
                     onMedicineClick={handleMedicineClick}
+                    onEdit={() => {
+                        setEditingRack(selectedCategory);
+                        setSelectedCategory(null);
+                        setIsEditRackOpen(true);
+                    }}
                 />
 
                 {/* Full Medicine Info Modal */}
@@ -256,6 +263,35 @@ export default function MedicineRackPage() {
                 {isLegendOpen && (
                     <KeyLegendModal
                         onClose={() => setIsLegendOpen(false)}
+                    />
+                )}
+
+                {/* Add Rack Modal */}
+                {isAddRackOpen && (
+                    <AddRackModal
+                        isOpen={isAddRackOpen}
+                        onClose={() => setIsAddRackOpen(false)}
+                        onSave={(newRack) => {
+                            setRackData(prev => [...prev, newRack]);
+                            setIsAddRackOpen(false);
+                        }}
+                    />
+                )}
+
+                {/* Edit Rack Modal */}
+                {isEditRackOpen && editingRack && (
+                    <EditRackModal
+                        isOpen={isEditRackOpen}
+                        rack={editingRack}
+                        onClose={() => {
+                            setIsEditRackOpen(false);
+                            setEditingRack(null);
+                        }}
+                        onSave={(updatedRack) => {
+                            setRackData(prev => prev.map(r => r.id === updatedRack.id ? updatedRack : r));
+                            setIsEditRackOpen(false);
+                            setEditingRack(null);
+                        }}
                     />
                 )}
 
