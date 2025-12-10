@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { getMedicines } from '@/services/api';
 import { Medicine } from '@/lib/types';
-import { Search, Package, Download, Printer, FileSpreadsheet, Eye, Trash2, ChevronDown, ChevronUp, Plus } from 'lucide-react';
+import { Search, Package, Download, Printer, FileSpreadsheet, Eye, Trash2, ChevronDown, ChevronUp, Plus, Filter, X } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import MedicineDetailsModal from '@/components/medicine-rack/MedicineDetailsModal';
@@ -17,12 +17,17 @@ interface RackCategory {
     medicines: Medicine[];
 }
 
+type SortFilter = 'all' | 'top-selling' | 'low-selling';
+
 export default function MedicineRackPage() {
     const [medicines, setMedicines] = useState<Medicine[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
     const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(null);
     const [expandedRacks, setExpandedRacks] = useState<Set<string>>(new Set(['all']));
+    const [rackFilters, setRackFilters] = useState<Record<string, SortFilter>>({});
+    const [isAddRackModalOpen, setIsAddRackModalOpen] = useState(false);
+    const [customRacks, setCustomRacks] = useState<RackCategory[]>([]);
 
     useEffect(() => {
         const loadData = async () => {
@@ -50,6 +55,7 @@ export default function MedicineRackPage() {
             { id: 'respiratory', name: 'Respiratory Rack', icon: '🫁', color: 'bg-cyan-50 border-cyan-200', medicines: [] },
             { id: 'gastrointestinal', name: 'Gastrointestinal Rack', icon: '🔬', color: 'bg-yellow-50 border-yellow-200', medicines: [] },
             { id: 'other', name: 'Other Medicines', icon: '📦', color: 'bg-slate-50 border-slate-200', medicines: [] },
+            ...customRacks,
         ];
 
         // Categorize medicines based on name/generic name keywords
@@ -75,24 +81,46 @@ export default function MedicineRackPage() {
             }
         });
 
-        return categories.filter(cat => cat.medicines.length > 0);
-    }, [medicines]);
+        // Filter out default empty racks, but keep all custom racks (even if empty)
+        return categories.filter(cat => cat.medicines.length > 0 || cat.id.startsWith('custom-'));
+    }, [medicines, customRacks]);
 
-    // Filter medicines based on search
+    // Filter and sort medicines based on search and per-rack filters
     const filteredRacks = useMemo(() => {
-        if (!searchTerm) return categorizedRacks;
+        let racks = categorizedRacks;
 
-        const lowerSearch = searchTerm.toLowerCase();
-        return categorizedRacks.map(rack => ({
-            ...rack,
-            medicines: rack.medicines.filter(med =>
-                med.name.toLowerCase().includes(lowerSearch) ||
-                med.genericName.toLowerCase().includes(lowerSearch) ||
-                med.manufacture.toLowerCase().includes(lowerSearch) ||
-                med.productCode.toLowerCase().includes(lowerSearch)
-            )
-        })).filter(rack => rack.medicines.length > 0);
-    }, [categorizedRacks, searchTerm]);
+        // Apply search filter
+        if (searchTerm) {
+            const lowerSearch = searchTerm.toLowerCase();
+            racks = racks.map(rack => ({
+                ...rack,
+                medicines: rack.medicines.filter(med =>
+                    med.name.toLowerCase().includes(lowerSearch) ||
+                    med.genericName.toLowerCase().includes(lowerSearch) ||
+                    med.manufacture.toLowerCase().includes(lowerSearch) ||
+                    med.productCode.toLowerCase().includes(lowerSearch)
+                )
+            })).filter(rack => rack.medicines.length > 0);
+        }
+
+        // Apply per-rack sort filters
+        racks = racks.map(rack => {
+            const filter = rackFilters[rack.id] || 'all';
+            if (filter === 'all') {
+                return rack;
+            }
+            return {
+                ...rack,
+                medicines: [...rack.medicines].sort((a, b) => {
+                    const aSold = a.totalSold || 0;
+                    const bSold = b.totalSold || 0;
+                    return filter === 'top-selling' ? bSold - aSold : aSold - bSold;
+                })
+            };
+        });
+
+        return racks;
+    }, [categorizedRacks, searchTerm, rackFilters]);
 
     const toggleRack = (rackId: string) => {
         setExpandedRacks(prev => {
@@ -116,6 +144,36 @@ export default function MedicineRackPage() {
         }
     };
 
+    const handleAddMedicine = (newMedicine: Partial<Medicine>) => {
+        const medicine: Medicine = {
+            id: `MED-${Date.now()}`,
+            srlNo: medicines.length + 1,
+            name: newMedicine.name || '',
+            genericName: newMedicine.genericName || '',
+            strength: newMedicine.strength || '',
+            type: newMedicine.type || 'Tablet',
+            manufacture: newMedicine.manufacture || '',
+            productCode: newMedicine.productCode || `PC-${Date.now()}`,
+            barcode: newMedicine.barcode || '',
+            price: newMedicine.price || 0,
+            buyingPrice: newMedicine.buyingPrice || 0,
+            mrp: newMedicine.mrp || 0,
+            inStock: newMedicine.inStock || 0,
+            rackNo: newMedicine.rackNo || '',
+            rackLocation: newMedicine.rackNo || '',
+            supplier: newMedicine.supplier || '',
+            batchId: newMedicine.batchId || '',
+            expiryDate: newMedicine.expiryDate || '',
+            purchaseDate: newMedicine.purchaseDate || new Date().toISOString().split('T')[0],
+            totalPurchase: newMedicine.totalPurchase || 0,
+            totalSold: newMedicine.totalSold || 0,
+            vat: 0,
+            stockStatus: !newMedicine.inStock || newMedicine.inStock === 0 ? 'Stock Alert' :
+                newMedicine.inStock < 20 ? 'Low Stock' : 'Normal',
+        };
+        setMedicines(prev => [...prev, medicine]);
+    };
+
     const totalMedicines = medicines.length;
 
     return (
@@ -133,16 +191,16 @@ export default function MedicineRackPage() {
                                 <p className="text-xs text-slate-500">Categorized inventory - {totalMedicines.toLocaleString()} medicines in {filteredRacks.length} racks</p>
                             </div>
                         </div>
-                        <Button className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
+                        <Button className="bg-blue-600 hover:bg-blue-700 text-white gap-2" onClick={() => setIsAddRackModalOpen(true)}>
                             <Plus size={18} />
-                            Add Medicine
+                            Add Rack
                         </Button>
                     </div>
                 </div>
 
                 {/* Toolbar */}
                 <div className="px-6 py-3 bg-white border-b border-slate-200 flex justify-between items-center">
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 items-center">
                         <Button variant="outline" size="sm" className="h-8 text-xs gap-1">
                             <FileSpreadsheet size={14} /> CSV
                         </Button>
@@ -179,25 +237,42 @@ export default function MedicineRackPage() {
                                 <div key={rack.id} className={`bg-white rounded-lg border-2 ${rack.color} shadow-sm overflow-hidden`}>
                                     {/* Rack Header */}
                                     <div
-                                        className="px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-slate-50/50 transition-colors"
-                                        onClick={() => toggleRack(rack.id)}
+                                        className="px-4 py-3 flex items-center justify-between bg-slate-50/50 border-b border-slate-200"
                                     >
-                                        <div className="flex items-center gap-3">
+                                        <div
+                                            className="flex items-center gap-3 cursor-pointer flex-1"
+                                            onClick={() => toggleRack(rack.id)}
+                                        >
                                             <span className="text-2xl">{rack.icon}</span>
                                             <div>
                                                 <h3 className="font-bold text-slate-800">{rack.name}</h3>
                                                 <p className="text-xs text-slate-500">{rack.medicines.length} medicines</p>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-3">
+                                            <div className="relative" onClick={(e) => e.stopPropagation()}>
+                                                <Filter className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" size={12} />
+                                                <select
+                                                    value={rackFilters[rack.id] || 'all'}
+                                                    onChange={(e) => setRackFilters(prev => ({ ...prev, [rack.id]: e.target.value as SortFilter }))}
+                                                    className="pl-7 pr-6 h-7 text-[10px] rounded-md border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none cursor-pointer"
+                                                >
+                                                    <option value="all">All</option>
+                                                    <option value="top-selling">Top Selling</option>
+                                                    <option value="low-selling">Low Selling</option>
+                                                </select>
+                                                <ChevronDown className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={10} />
+                                            </div>
                                             <span className="text-xs font-semibold text-slate-600 bg-white px-3 py-1 rounded-full border border-slate-200">
                                                 {rack.medicines.length} items
                                             </span>
-                                            {expandedRacks.has(rack.id) ? (
-                                                <ChevronUp className="text-slate-400" size={20} />
-                                            ) : (
-                                                <ChevronDown className="text-slate-400" size={20} />
-                                            )}
+                                            <button onClick={() => toggleRack(rack.id)} className="p-1">
+                                                {expandedRacks.has(rack.id) ? (
+                                                    <ChevronUp className="text-slate-400" size={20} />
+                                                ) : (
+                                                    <ChevronDown className="text-slate-400" size={20} />
+                                                )}
+                                            </button>
                                         </div>
                                     </div>
 
@@ -214,6 +289,8 @@ export default function MedicineRackPage() {
                                                             <th className="border border-slate-300 px-2 py-2 font-semibold text-slate-700 text-left min-w-[150px]">Generic Name</th>
                                                             <th className="border border-slate-300 px-2 py-2 font-semibold text-slate-700 text-left min-w-[100px]">Strength</th>
                                                             <th className="border border-slate-300 px-2 py-2 font-semibold text-slate-700 text-left min-w-[150px]">Manufacturer</th>
+                                                            <th className="border border-slate-300 px-2 py-2 font-semibold text-slate-700 text-right min-w-[80px]">Purchase Qty</th>
+                                                            <th className="border border-slate-300 px-2 py-2 font-semibold text-slate-700 text-right min-w-[80px]">Sold Qty</th>
                                                             <th className="border border-slate-300 px-2 py-2 font-semibold text-slate-700 text-right min-w-[80px]">Price</th>
                                                             <th className="border border-slate-300 px-2 py-2 font-semibold text-slate-700 text-right min-w-[80px]">In Stock</th>
                                                             <th className="border border-slate-300 px-2 py-2 font-semibold text-slate-700 text-center min-w-[100px]">Actions</th>
@@ -243,13 +320,19 @@ export default function MedicineRackPage() {
                                                                 <td className="border border-slate-300 px-2 py-1.5 text-slate-600">
                                                                     {medicine.manufacture}
                                                                 </td>
+                                                                <td className="border border-slate-300 px-2 py-1.5 text-right text-slate-700">
+                                                                    {medicine.totalPurchase || 0}
+                                                                </td>
+                                                                <td className="border border-slate-300 px-2 py-1.5 text-right text-slate-700 font-medium">
+                                                                    {medicine.totalSold || 0}
+                                                                </td>
                                                                 <td className="border border-slate-300 px-2 py-1.5 text-right text-slate-700 font-medium">
                                                                     ৳{medicine.price.toFixed(2)}
                                                                 </td>
                                                                 <td className="border border-slate-300 px-2 py-1.5 text-right">
                                                                     <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ${medicine.inStock === 0 ? 'bg-red-100 text-red-700' :
-                                                                            medicine.inStock < 20 ? 'bg-amber-100 text-amber-700' :
-                                                                                'bg-emerald-100 text-emerald-700'
+                                                                        medicine.inStock < 20 ? 'bg-amber-100 text-amber-700' :
+                                                                            'bg-emerald-100 text-emerald-700'
                                                                         }`}>
                                                                         {medicine.inStock}
                                                                     </span>
@@ -292,6 +375,54 @@ export default function MedicineRackPage() {
                     medicine={selectedMedicine}
                     onClose={() => setSelectedMedicine(null)}
                 />
+            )}
+
+            {/* Add Rack Modal */}
+            {isAddRackModalOpen && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+                        <div className="bg-blue-600 px-6 py-4 flex items-center justify-between rounded-t-lg">
+                            <h2 className="text-lg font-bold text-white">Add New Rack</h2>
+                            <button onClick={() => setIsAddRackModalOpen(false)} className="text-white hover:text-slate-200">
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <form onSubmit={(e) => {
+                            e.preventDefault();
+                            const formData = new FormData(e.currentTarget);
+                            const rackName = formData.get('rackName') as string;
+                            if (rackName) {
+                                const newRack: RackCategory = {
+                                    id: `custom-${Date.now()}`,
+                                    name: rackName,
+                                    icon: '📦',
+                                    color: 'bg-indigo-50 border-indigo-200',
+                                    medicines: []
+                                };
+                                setCustomRacks(prev => [...prev, newRack]);
+                                setIsAddRackModalOpen(false);
+                            }
+                        }} className="p-6">
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-slate-700 mb-2">Rack Name *</label>
+                                <Input
+                                    name="rackName"
+                                    required
+                                    placeholder="e.g. Dermatology Rack"
+                                    className="w-full"
+                                />
+                            </div>
+                            <div className="flex justify-end gap-3">
+                                <Button type="button" variant="outline" onClick={() => setIsAddRackModalOpen(false)}>
+                                    Cancel
+                                </Button>
+                                <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">
+                                    Add Rack
+                                </Button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             )}
         </DashboardLayout>
     );
