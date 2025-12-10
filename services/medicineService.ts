@@ -7,7 +7,7 @@
 
 import { apiClient } from '@/lib/api/client';
 import { API_ENDPOINTS } from '@/lib/config/api';
-import { Medicine, Rack, GenericName } from '@/lib/types';
+import { Medicine, Rack, GenericName, Supplier } from '@/lib/types';
 import { mockMedicines, mockRacks, mockGenerics } from '@/lib/data/mockData';
 
 const USE_MOCK_DATA = true; // Toggle for development
@@ -146,5 +146,56 @@ export const medicineService = {
 
         const response = await apiClient.get<GenericName[]>(API_ENDPOINTS.GENERICS);
         return response.success && response.data ? response.data : mockGenerics;
+    },
+
+    /**
+     * Get all suppliers
+     */
+    async getSuppliers(): Promise<Supplier[]> {
+        if (USE_MOCK_DATA) {
+            const { mockSuppliers } = await import('@/lib/data/mockData');
+            return Promise.resolve(mockSuppliers);
+        }
+        // Fallback or API call
+        return Promise.resolve([]);
+    },
+
+    /**
+     * Get supplier by ID
+     */
+    async getSupplierById(id: string): Promise<Supplier | null> {
+        if (USE_MOCK_DATA) {
+            const { mockSuppliers } = await import('@/lib/data/mockData');
+            const supplier = mockSuppliers.find((s) => s.id === id);
+            return Promise.resolve(supplier || null);
+        }
+        return Promise.resolve(null);
+    },
+
+    /**
+     * Create new supplier
+     */
+    async createSupplier(supplier: Partial<Supplier>): Promise<Supplier> {
+        if (USE_MOCK_DATA) {
+            const { mockSuppliers } = await import('@/lib/data/mockData');
+            const newSupplier: Supplier = {
+                id: `SUP-${String(mockSuppliers.length + 1).padStart(3, '0')}`,
+                name: supplier.name || '',
+                company: supplier.company || '',
+                phone: supplier.phone || '',
+                email: supplier.email,
+                address: supplier.address,
+                nid: supplier.nid,
+                city: supplier.city,
+                state: supplier.state,
+                country: supplier.country || 'Bangladesh',
+                status: supplier.status || 'Active',
+                purchaseInvoiceCount: 0
+            };
+            mockSuppliers.push(newSupplier);
+            return Promise.resolve(newSupplier);
+        }
+        // Fallback or API call
+        return Promise.reject('API not implemented');
     },
 };

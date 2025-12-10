@@ -17,6 +17,8 @@ import {
     Follower,
     Rack,
     GenericName,
+    Supplier,
+    Asset,
 } from '@/lib/types';
 
 // ============================================
@@ -59,6 +61,135 @@ export const mockFollowers: Follower[] = [
     { id: '8', name: "Dr Lipi's pt", phone: '01303144130' },
     { id: '9', name: 'Nity/ Tuba+Ilham Feni', phone: '497/6' },
 ];
+
+// ============================================
+// SUPPLIERS
+// ============================================
+
+export const mockSuppliers: Supplier[] = [
+    { id: '1', name: 'Hasanat Zamil', company: 'ACI Limited', phone: '01923412344', status: 'Active', purchaseInvoiceCount: 1 },
+    { id: '2', name: 'Shakil', company: 'A.J International', phone: '01979852191', status: 'Active', purchaseInvoiceCount: 0 },
+    { id: '3', name: 'Kabir', company: 'ACI Consumer Brands', phone: '01304445906', status: 'Active', purchaseInvoiceCount: 0 },
+    {
+        id: 'SUP-001',
+        name: 'Anis (KINETIES)',
+        company: 'Incepta Pharmaceuticals Limited',
+        phone: '01847323825',
+        email: 'admin@admin.com',
+        address: 'Dhaka, Bangladesh',
+        nid: '1234567890',
+        city: 'Dhaka',
+        status: 'Active',
+        purchaseInvoiceCount: 32
+    },
+    {
+        id: 'SUP-002',
+        name: 'Rahim (BEXIMCO)',
+        company: 'Beximco Pharmaceuticals Ltd',
+        phone: '01711223344',
+        email: 'rahim@beximco.com',
+        address: 'Gazipur, Bangladesh',
+        status: 'Active',
+        purchaseInvoiceCount: 15
+    },
+    {
+        id: 'SUP-003',
+        name: 'Karim (SQUARE)',
+        company: 'Square Pharmaceuticals Ltd',
+        phone: '01911223344',
+        email: 'karim@square.com',
+        address: 'Pabna, Bangladesh',
+        status: 'Active',
+        purchaseInvoiceCount: 28
+    },
+    { id: '7', name: 'Mosharof Cardiac', company: 'Popular Pharmaceuticals Ltd.', phone: '01400542888', status: 'Active', purchaseInvoiceCount: 14 },
+    { id: '8', name: 'Mamun', company: 'Popular Pharmaceuticals Ltd.', phone: '01778370877', status: 'Active', purchaseInvoiceCount: 11 },
+    { id: '9', name: 'Local', company: 'Beximco Pharmaceuticals Ltd.', phone: '', status: 'Active', purchaseInvoiceCount: 2 },
+    { id: '10', name: 'Mamun', company: 'Incepta Pharmaceuticals Limited', phone: '01778370877', status: 'Active', purchaseInvoiceCount: 0 },
+];
+
+// ============================================
+// ASSETS
+// ============================================
+
+export const mockAssets: Asset[] = [
+    {
+        id: 'AST-001',
+        name: 'Refrigerator',
+        assetType: 'Operating Asset',
+        assetCost: 9450.00,
+        currentValue: 5194.50,
+        salvageValue: 0.00,
+        usefulLife: 24,
+        depreciationType: 'Monthly',
+        depreciation: '$31.50 Per Month',
+        depreciationStatus: 'Yes',
+        rate: 0.02,
+        status: 'Active',
+        createdAt: '5th January 2025'
+    },
+    {
+        id: 'AST-002',
+        name: 'Beximco Leather Tube seat',
+        assetType: 'Intangible Asset',
+        assetCost: 27382.00,
+        currentValue: 14476.00,
+        salvageValue: 0.00,
+        usefulLife: 36,
+        depreciationType: 'Monthly',
+        depreciation: '$45.50 Per Month',
+        depreciationStatus: 'Yes',
+        rate: 0.015,
+        status: 'Active',
+        createdAt: '4th January 2025'
+    },
+    {
+        id: 'AST-003',
+        name: 'Patient Bed 2-Rows, Red 3-Trunod Chair',
+        assetType: 'Operating Asset',
+        assetCost: 5100.00,
+        currentValue: 3104.70,
+        salvageValue: 0.00,
+        usefulLife: 18,
+        depreciationType: 'Monthly',
+        depreciation: '$28.30 Per Month',
+        depreciationStatus: 'Yes',
+        rate: 0.025,
+        status: 'Active',
+        createdAt: '13th January 2025'
+    },
+    {
+        id: 'AST-004',
+        name: 'Canon Printer lens',
+        assetType: 'Operating Asset',
+        assetCost: 3300.00,
+        currentValue: 1462.07,
+        salvageValue: 0.00,
+        usefulLife: 24,
+        depreciationType: 'Monthly',
+        depreciation: '$76.58 Per Month',
+        depreciationStatus: 'Yes',
+        rate: 0.023,
+        status: 'Active',
+        createdAt: '10th January 2025'
+    },
+    {
+        id: 'AST-005',
+        name: 'CCTV Machine',
+        assetType: 'Operating Asset',
+        assetCost: 2400.00,
+        currentValue: 948.00,
+        salvageValue: 0.00,
+        usefulLife: 24,
+        depreciationType: 'Monthly',
+        depreciation: '$60.50 Per Month',
+        depreciationStatus: 'Yes',
+        rate: 0.025,
+        status: 'Active',
+        createdAt: '14th January 2025'
+    }
+];
+
 
 // ============================================
 // RACKS & GENERICS

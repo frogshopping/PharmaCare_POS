@@ -10,7 +10,7 @@ interface MedicineTableProps {
     onRetail: (medicine: Medicine) => void;
     onEdit: (medicine: Medicine) => void;
     onDelete: (medicine: Medicine) => void;
-    onViewDetails?: (medicine: Medicine) => void; // New prop for opening details modal
+    onViewDetails?: (medicine: Medicine) => void;
 }
 
 export default function MedicineTable({
@@ -21,101 +21,105 @@ export default function MedicineTable({
     onViewDetails
 }: MedicineTableProps) {
 
-    // Helper for Type Icon
-    const getTypeIcon = (type?: string) => {
-        switch (type) {
-            case 'Syrup':
-            case 'Suspension':
-                return <GlassWater size={16} className="text-blue-500" />;
-            case 'Capsule':
-                return <Pill size={16} className="text-orange-500" />;
-            case 'Injection':
-                return <Syringe size={16} className="text-red-500" />;
-            case 'Cream':
-                return <Box size={16} className="text-pink-500" />;
-            case 'Tablet':
-            default:
-                return <Disc size={16} className="text-purple-500" />;
-        }
-    };
-
     return (
         <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-                <thead className="bg-slate-50/50 border-b border-slate-200">
+            <table className="w-full border-collapse text-xs">
+                <thead className="bg-slate-100 sticky top-0 z-10">
                     <tr>
-                        <th className="px-3 py-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Product Info</th>
-                        <th className="px-3 py-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Type / Location</th>
-                        <th className="px-3 py-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Pricing</th>
-                        <th className="px-3 py-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Stock</th>
-                        <th className="px-3 py-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Batch / Expiry</th>
-                        <th className="px-3 py-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+                        <th className="border border-slate-300 px-2 py-2 font-semibold text-slate-700 text-left w-12">#</th>
+                        <th className="border border-slate-300 px-2 py-2 font-semibold text-slate-700 text-left min-w-[200px]">Medicine Name</th>
+                        <th className="border border-slate-300 px-2 py-2 font-semibold text-slate-700 text-left min-w-[150px]">Generic Name</th>
+                        <th className="border border-slate-300 px-2 py-2 font-semibold text-slate-700 text-left min-w-[100px]">Strength</th>
+                        <th className="border border-slate-300 px-2 py-2 font-semibold text-slate-700 text-left min-w-[150px]">Manufacturer</th>
+                        <th className="border border-slate-300 px-2 py-2 font-semibold text-slate-700 text-right min-w-[80px]">Price</th>
+                        <th className="border border-slate-300 px-2 py-2 font-semibold text-slate-700 text-right min-w-[60px]">VAT %</th>
+                        <th className="border border-slate-300 px-2 py-2 font-semibold text-slate-700 text-center min-w-[80px]">Rack No.</th>
+                        <th className="border border-slate-300 px-2 py-2 font-semibold text-slate-700 text-right min-w-[80px]">Purchased</th>
+                        <th className="border border-slate-300 px-2 py-2 font-semibold text-slate-700 text-right min-w-[80px]">Sold</th>
+                        <th className="border border-slate-300 px-2 py-2 font-semibold text-slate-700 text-right min-w-[80px]">In Stock</th>
+                        <th className="border border-slate-300 px-2 py-2 font-semibold text-slate-700 text-center min-w-[150px]">Actions</th>
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50">
-                    {medicines.map((medicine) => (
+                <tbody>
+                    {medicines.map((medicine, index) => (
                         <tr
                             key={medicine.id}
-                            className="hover:bg-slate-50/80 transition-colors group cursor-pointer text-xs"
-                            onClick={() => onViewDetails?.(medicine)} // Row click opens details
+                            className="hover:bg-blue-50/30 transition-colors cursor-pointer"
+                            onClick={() => onViewDetails?.(medicine)}
                         >
-                            <td className="px-3 py-2 align-top">
-                                <div className="font-bold text-slate-700">{medicine.name}</div>
-                                <div className="text-[10px] text-slate-500 mt-0.5">{medicine.strength || 'N/A'} • {medicine.manufacture || 'Unknown Manufacturer'}</div>
-                                <div className="text-[10px] text-slate-400 font-mono mt-0.5">Code: {medicine.productCode}</div>
+                            <td className="border border-slate-300 px-2 py-1.5 text-slate-500 text-center">
+                                {medicine.srlNo || index + 1}
                             </td>
-                            <td className="px-3 py-2 align-top">
-                                <div className="flex items-center gap-1.5 mb-0.5">
-                                    {getTypeIcon(medicine.type)}
-                                    <span className="text-xs text-slate-600">{medicine.type || 'Tablet'}</span>
-                                </div>
-                                <div className="inline-flex items-center px-1.5 py-0 rounded border border-slate-200 bg-slate-50 text-[10px] font-medium text-slate-500">
-                                    {medicine.rackLocation || medicine.rackNo || 'Unassigned'}
-                                </div>
+                            <td className="border border-slate-300 px-2 py-1.5">
+                                <div className="font-semibold text-slate-800">{medicine.name}</div>
+                                <div className="text-[10px] text-slate-500 mt-0.5">{medicine.type || 'Tablet'}</div>
                             </td>
-                            <td className="px-3 py-2 align-top">
-                                <div className="text-xs font-semibold text-slate-700">৳{medicine.price}</div>
-                                <div className="text-[10px] text-slate-500">Buy: ৳{medicine.buyingPrice ? medicine.buyingPrice.toFixed(2) : '-'}</div>
+                            <td className="border border-slate-300 px-2 py-1.5 text-slate-600">
+                                {medicine.genericName || '-'}
                             </td>
-                            <td className="px-3 py-2 align-top">
-                                <div className={`inline-flex items-center px-1.5 py-0.5 rounded-md border text-[10px] font-bold ${medicine.inStock === 0 ? 'bg-red-50 text-red-700 border-red-100' :
-                                    medicine.inStock < 20 ? 'bg-amber-50 text-amber-700 border-amber-100' :
-                                        'bg-emerald-50 text-emerald-700 border-emerald-100'
+                            <td className="border border-slate-300 px-2 py-1.5 text-slate-600">
+                                {medicine.strength || '-'}
+                            </td>
+                            <td className="border border-slate-300 px-2 py-1.5 text-slate-600">
+                                {medicine.manufacture}
+                            </td>
+                            <td className="border border-slate-300 px-2 py-1.5 text-right text-slate-700 font-medium">
+                                ৳{medicine.price.toFixed(2)}
+                            </td>
+                            <td className="border border-slate-300 px-2 py-1.5 text-right text-slate-600">
+                                {medicine.vat || 0}%
+                            </td>
+                            <td className="border border-slate-300 px-2 py-1.5 text-center text-slate-600">
+                                {medicine.rackLocation || medicine.rackNo || '-'}
+                            </td>
+                            <td className="border border-slate-300 px-2 py-1.5 text-right text-slate-700">
+                                {medicine.totalPurchase || 0}
+                            </td>
+                            <td className="border border-slate-300 px-2 py-1.5 text-right text-slate-700">
+                                {medicine.totalSold || 0}
+                            </td>
+                            <td className="border border-slate-300 px-2 py-1.5 text-right">
+                                <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ${medicine.inStock === 0 ? 'bg-red-100 text-red-700' :
+                                    medicine.inStock < 20 ? 'bg-amber-100 text-amber-700' :
+                                        'bg-emerald-100 text-emerald-700'
                                     }`}>
-                                    {medicine.inStock} units
-                                </div>
+                                    {medicine.inStock}
+                                </span>
                             </td>
-                            <td className="px-3 py-2 align-top">
-                                <div className="text-xs font-mono text-slate-600">{medicine.batchId || 'N/A'}</div>
-                                <div className="text-[10px] text-slate-500 mt-0.5">Exp: {medicine.expiryDate || 'N/A'}</div>
-                            </td>
-                            <td className="px-3 py-2 text-right">
-                                <div className="flex justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                            <td className="border border-slate-300 px-2 py-1.5 text-center">
+                                <div className="flex justify-center gap-1" onClick={(e) => e.stopPropagation()}>
                                     <Button
-                                        size="icon"
-                                        variant="ghost"
-                                        className="h-8 w-8 text-slate-500 hover:text-blue-600 hover:bg-blue-50"
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-6 text-[10px] px-2 text-slate-600 border-slate-300 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-400"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onViewDetails?.(medicine);
+                                        }}
+                                    >
+                                        View
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        className="h-6 text-[10px] px-2 bg-purple-600 hover:bg-purple-700 text-white"
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             onEdit(medicine);
                                         }}
-                                        title="Edit"
-                                        aria-label="Edit"
                                     >
-                                        <Edit2 size={14} />
+                                        Edit
                                     </Button>
                                     <Button
-                                        size="icon"
+                                        size="sm"
                                         variant="ghost"
-                                        className="h-8 w-8 text-slate-500 hover:text-red-600 hover:bg-red-50"
+                                        className="h-6 w-6 p-0 text-slate-400 hover:text-red-600 hover:bg-red-50"
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             onDelete(medicine);
                                         }}
                                         title="Delete"
-                                        aria-label="Delete"
                                     >
-                                        <Trash2 size={14} />
+                                        <Trash2 size={12} />
                                     </Button>
                                 </div>
                             </td>

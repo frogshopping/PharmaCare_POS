@@ -24,19 +24,6 @@ const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({ invoice, onClos
                         <h2 className="text-xl font-bold text-slate-800">Purchase Invoice # <span className="text-slate-500 font-normal text-lg">{invoice.id}</span></h2>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" className="gap-2 text-slate-600 bg-green-50 hover:bg-green-100 hover:text-green-700 border-green-200">
-                            <Send size={16} /> Send Mail
-                        </Button>
-                        <Button variant="outline" size="sm" className="gap-2 text-slate-600 bg-purple-50 hover:bg-purple-100 hover:text-purple-700 border-purple-200">
-                            <Edit size={16} /> Edit
-                        </Button>
-                        <Button variant="outline" size="sm" className="gap-2 text-slate-600 bg-orange-50 hover:bg-orange-100 hover:text-orange-700 border-orange-200">
-                            <Plus size={16} /> Add Payment
-                        </Button>
-                        <div className="h-6 w-px bg-slate-300 mx-1" />
-                        <Button variant="outline" size="sm" className="gap-2 text-slate-600">
-                            <Printer size={16} /> Print
-                        </Button>
                         <button onClick={onClose} className="ml-2 p-2 transition-colors rounded-full hover:bg-slate-100 text-slate-500">
                             <X size={20} />
                         </button>
@@ -49,7 +36,7 @@ const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({ invoice, onClos
 
                         {/* Status Banner */}
                         <div className={`w-full py-2 px-4 rounded text-center font-bold text-sm uppercase tracking-widest ${invoice.status === 'Paid' ? 'bg-green-100 text-green-700' :
-                                invoice.status === 'Due' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
+                            invoice.status === 'Due' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
                             }`}>
                             Status: {invoice.status}
                         </div>

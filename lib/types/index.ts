@@ -49,8 +49,10 @@ export interface Medicine {
     inStock: number;
     stockStatus: 'Low Stock' | 'Stock Alert' | 'Normal';
     category?: string;
+    subCategory?: string;
+    childCategory?: string;
     expiryDate?: string;
-    type?: 'Tablet' | 'Syrup' | 'Capsule' | 'Injection' | 'Suspension' | 'Cream';
+    type?: 'Tablet' | 'Syrup' | 'Capsule' | 'Injection' | 'Suspension' | 'Cream' | 'Other';
     rackLocation?: string;
     batchId?: string;
     supplier?: string;
@@ -65,6 +67,9 @@ export interface Medicine {
         box: number;
     };
     supplierContact?: string;
+    status?: 'Active' | 'Inactive';
+    eCommerceProduct?: boolean;
+    stockAlert?: number;
 }
 
 export interface CategoryGroup {
@@ -191,6 +196,43 @@ export interface Customer {
     loyaltyPoints: number;
     memberSince: string;
     avatar?: string;
+}
+
+export interface Supplier {
+    id: string;
+    name: string;
+    company: string;
+    phone: string;
+    email?: string;
+    address?: string;
+    nid?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    status: 'Active' | 'Inactive';
+    purchaseInvoiceCount: number;
+}
+
+// ============================================
+// ASSET MANAGEMENT
+// ============================================
+
+export interface Asset {
+    id: string;
+    name: string;
+    assetType: 'Operating Asset' | 'Tangible Fixed Asset' | 'Intangible Asset' | 'Capital Asset';
+    assetCost: number;
+    currentValue: number;
+    salvageValue: number;
+    usefulLife: number; // in months
+    depreciationType: 'Monthly' | 'Yearly';
+    depreciation: string; // e.g., "$31.50 Per Month"
+    depreciationStatus: 'Yes' | 'No';
+    rate: number; // depreciation rate
+    status: 'Active' | 'Inactive';
+    note?: string;
+    image?: string;
+    createdAt: string;
 }
 
 // ============================================

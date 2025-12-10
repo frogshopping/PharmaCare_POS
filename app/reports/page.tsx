@@ -13,12 +13,15 @@ import {
   Package,
   ShieldAlert,
   BarChart3,
-  ShoppingCart
+
+  ShoppingCart,
+  ChevronRight
 } from 'lucide-react';
+import Link from 'next/link';
 import { ProfitabilityReport } from '@/components/reports/ProfitabilityReport';
 import { PurchaseReport } from '@/components/reports/PurchaseReport';
 
-type SectionId = "expiry" | "purchase" | "profitability" | "customers" | "finance" | "sales";
+type SectionId = "expiry" | "purchase" | "profitability" | "customers" | "finance" | "sales" | "inventory";
 
 const summaryCards = [
   { label: "Total Revenue", value: "$127,450", icon: DollarSign, color: "bg-sky-50" },
@@ -126,6 +129,17 @@ export default function ReportsPage() {
                       </tbody>
                     </table>
                   </div>
+
+
+                  <div className="mt-4 flex justify-end">
+                    <Link
+                      href="/reports/stock-expiry"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-purple-100 text-purple-600 rounded-lg hover:bg-purple-50 transition-colors text-sm font-medium shadow-sm"
+                    >
+                      View Full Expiry Report
+                      <ChevronRight size={16} />
+                    </Link>
+                  </div>
                 </div>
               )}
             </div>
@@ -193,10 +207,48 @@ export default function ReportsPage() {
                 </div>
               )}
             </div>
+
+            {/* 7. Inventory Reports */}
+            <div className="border border-slate-200 rounded-xl bg-white shadow-sm overflow-hidden">
+              <button
+                onClick={() => toggleSection('inventory')}
+                className="w-full px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-indigo-100 rounded-lg">
+                    <Package className="text-indigo-600" size={20} />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="font-semibold text-slate-800">Inventory Reports</h3>
+                    <p className="text-sm text-slate-500">Stock analysis and profitability tracking</p>
+                  </div>
+                </div>
+                {openSection === 'inventory' ? <ChevronUp className="text-slate-400" size={20} /> : <ChevronDown className="text-slate-400" size={20} />}
+              </button>
+
+              {openSection === 'inventory' && (
+                <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Link
+                      href="/reports/stock-products"
+                      className="p-4 bg-white border border-slate-200 rounded-lg hover:border-indigo-300 hover:shadow-md transition-all group"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h4 className="font-semibold text-slate-800 group-hover:text-indigo-600 transition-colors">Stock Products Report</h4>
+                          <p className="text-sm text-slate-500 mt-1">Comprehensive inventory and profit analysis</p>
+                        </div>
+                        <ChevronRight className="text-slate-400 group-hover:text-indigo-600 transition-colors" size={20} />
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
         </div>
       </div>
-    </DashboardLayout>
+    </DashboardLayout >
   );
 }

@@ -492,6 +492,14 @@ export default function InventoryPage() {
                     <MedicineDetailsModal
                         medicine={selectedMedicine}
                         onClose={() => setSelectedMedicine(null)}
+                        onEdit={(med) => {
+                            setSelectedMedicine(null);
+                            // Ensure type compatibility. The modal passes back MedicineData.
+                            // In this context, selectedMedicine is explicitly Medicine type, 
+                            // and Rack items are converted to Medicine type before checking selectedMedicine.
+                            setEditingProduct(med as Medicine);
+                            setIsEditProductOpen(true);
+                        }}
                     />
                 )}
                 {isLegendOpen && (

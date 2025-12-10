@@ -1,13 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2, Save, Calendar, User, FileText, ShoppingCart, Download, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Invoice } from '@/services/purchaseDummyData';
 
 interface AddPurchaseModalProps {
     isOpen: boolean;
     onClose: () => void;
+    initialData?: Invoice | null;
 }
 
 interface NewItem {
@@ -15,18 +17,19 @@ interface NewItem {
     name: string;
     strength: string;
     type: string;
+    mfrDate: string;
+    expiryDate: string;
     qty: number;
     unit: string;
     unitPrice: number;
     mrp: number;
     tradePrice: number;
+    discountPercent: number;
     vat: number;
     totalAmount: number;
 }
 
-const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({ isOpen, onClose }) => {
-    if (!isOpen) return null;
-
+const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({ isOpen, onClose, initialData }) => {
     // Header State
     const [refId, setRefId] = useState(new Date().toLocaleDateString('en-GB'));
     const [company, setCompany] = useState('Renata Limited');
@@ -43,13 +46,58 @@ const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({ isOpen, onClose }) 
     const [itemName, setItemName] = useState('');
     const [strength, setStrength] = useState('');
     const [type, setType] = useState('Tablet');
+    const [mfrDate, setMfrDate] = useState('');
+    const [expiryDate, setExpiryDate] = useState('');
     const [qty, setQty] = useState<number | ''>('');
     const [unit, setUnit] = useState('Pcs');
     const [unitPrice, setUnitPrice] = useState<number | ''>('');
     const [mrp, setMrp] = useState<number | ''>('');
-
-    // Derived/Manual Item State
+    const [discountPercent, setDiscountPercent] = useState<number | ''>('');
     const [itemVat, setItemVat] = useState<number | ''>(0);
+
+    // Populate data for Edit Mode
+    useEffect(() => {
+        if (isOpen && initialData) {
+            setRefId(initialData.id); // Using ID as Ref ID for now
+            setCompany(initialData.pharmaceuticalCompany);
+            setContactName(initialData.supplierName);
+            setPhone(initialData.supplierContact);
+            setInvoiceDate(initialData.purchaseDate);
+            setStatus(initialData.status);
+
+            // Map existing items to form items
+            const mappedItems: NewItem[] = initialData.items.map(item => ({
+                id: item.id,
+                name: item.name,
+                strength: item.strength,
+                type: 'Tablet', // Default
+                mfrDate: '', // Default as not in dummy data
+                expiryDate: '', // Default as not in dummy data
+                qty: item.qty,
+                unit: 'Pcs', // Default
+                unitPrice: item.unitPrice,
+                mrp: 0, // Default
+                tradePrice: item.qty * item.unitPrice,
+                discountPercent: 0, // Default
+                vat: 0, // Default
+                totalAmount: item.total
+            }));
+            setItems(mappedItems);
+        } else if (isOpen && !initialData) {
+            // Reset for Add Mode
+            setRefId(new Date().toLocaleDateString('en-GB'));
+            setCompany('Renata Limited');
+            setContactName('Mohammad Ali');
+            setPhone('');
+            setEmail('');
+            setInvoiceDate(new Date().toLocaleDateString('en-GB'));
+            setStatus('Draft');
+            setItems([]);
+            setRemarks('');
+        }
+    }, [isOpen, initialData]);
+
+    if (!isOpen) return null;
 
     const handleAddItem = () => {
         if (!itemName || !qty || !unitPrice) return;
@@ -57,19 +105,25 @@ const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({ isOpen, onClose }) 
         const q = Number(qty);
         const p = Number(unitPrice);
         const v = Number(itemVat || 0);
+        const dPercent = Number(discountPercent || 0);
+
         const trade = q * p;
-        const total = trade + v;
+        const discountAmount = trade * (dPercent / 100);
+        const total = (trade - discountAmount) + v;
 
         const newItem: NewItem = {
             id: Date.now(),
             name: itemName,
             strength,
             type,
+            mfrDate,
+            expiryDate,
             qty: q,
             unit,
             unitPrice: p,
             mrp: Number(mrp || 0),
             tradePrice: trade,
+            discountPercent: dPercent,
             vat: v,
             totalAmount: total
         };
@@ -82,7 +136,11 @@ const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({ isOpen, onClose }) 
         setQty('');
         setUnitPrice('');
         setMrp('');
+        setDiscountPercent('');
         setItemVat(0);
+        // Keep dates or reset? Usually reset for new item or keep same batch? Resetting is safer.
+        setMfrDate('');
+        setExpiryDate('');
     };
 
     const handleRemoveItem = (id: number) => {
@@ -92,18 +150,21 @@ const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({ isOpen, onClose }) 
     // Footer Calculations
     const subTradeTotal = items.reduce((sum, item) => sum + item.tradePrice, 0);
     const vatTotal = items.reduce((sum, item) => sum + item.vat, 0);
-    const subTotal = subTradeTotal + vatTotal;
+    const discountTotal = items.reduce((sum, item) => sum + (item.tradePrice * (item.discountPercent / 100)), 0);
+    const subTotal = subTradeTotal - discountTotal + vatTotal;
     const grandTotal = subTotal;
 
     return (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
             {/* Reduced max-width and height */}
-            <div className="bg-slate-50 rounded-xl shadow-2xl w-full max-w-6xl h-[85vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-200">
+            <div className="bg-slate-50 rounded-xl shadow-2xl w-full max-w-[90vw] h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-200">
 
                 {/* Header Toolbar */}
                 <div className="px-6 py-4 bg-white border-b border-slate-200 flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-4">
-                        <h2 className="text-xl font-bold text-slate-800">Edit purchases Quote #27</h2>
+                        <h2 className="text-xl font-bold text-slate-800">
+                            {initialData ? `Edit Purchase ${initialData.id}` : 'Add New Purchase'}
+                        </h2>
                     </div>
                     <div className="flex gap-2">
                         {/* Neutral Back Button */}
@@ -211,58 +272,65 @@ const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({ isOpen, onClose }) 
                         </div>
 
                         {/* Add Item Inputs Grid */}
-                        <div className="p-4 bg-slate-50 border-b border-slate-200 grid grid-cols-12 gap-2 items-end">
-                            <div className="col-span-2 space-y-1">
-                                <label className="text-[10px] uppercase font-bold text-slate-500">Medicine Name <span className="text-red-500">*</span></label>
-                                <Input value={itemName} readOnly className="bg-slate-100 text-slate-500 h-8 text-xs" />
-                            </div>
-                            <div className="col-span-1 space-y-1">
-                                <label className="text-[10px] uppercase font-bold text-slate-500">Strength</label>
-                                <Input value={strength} onChange={(e) => setStrength(e.target.value)} className="h-8 text-xs" placeholder="25mg" />
-                            </div>
-                            <div className="col-span-1 space-y-1">
-                                <label className="text-[10px] uppercase font-bold text-slate-500">Type <span className="text-red-500">*</span></label>
-                                <Input value={type} onChange={(e) => setType(e.target.value)} className="h-8 text-xs" />
-                            </div>
-                            <div className="col-span-1 space-y-1">
-                                <label className="text-[10px] uppercase font-bold text-slate-500">Quantity</label>
-                                <Input type="number" value={qty} onChange={(e) => setQty(e.target.value === '' ? '' : Number(e.target.value))} className="h-8 text-xs" placeholder="0" />
-                            </div>
-                            <div className="col-span-1 space-y-1">
-                                <label className="text-[10px] uppercase font-bold text-slate-500">Unit</label>
-                                <select className="w-full h-8 text-xs rounded-md border border-slate-200 px-2" value={unit} onChange={(e) => setUnit(e.target.value)}>
-                                    <option>Pcs</option>
-                                    <option>Box</option>
-                                    <option>Strip</option>
-                                    <option>Syrup</option>
-                                    <option>Kg</option>
-                                    <option>Mg</option>
-                                    <option>Gm</option>
-                                    <option>Ltr</option>
-                                </select>
-                            </div>
-                            <div className="col-span-1 space-y-1">
-                                <label className="text-[10px] uppercase font-bold text-slate-500">Unit Price</label>
-                                <Input type="number" value={unitPrice} onChange={(e) => setUnitPrice(e.target.value === '' ? '' : Number(e.target.value))} className="h-8 text-xs" placeholder="0" />
-                            </div>
-                            <div className="col-span-1 space-y-1">
-                                <label className="text-[10px] uppercase font-bold text-slate-500">MRP</label>
-                                <Input type="number" value={mrp} onChange={(e) => setMrp(e.target.value === '' ? '' : Number(e.target.value))} className="h-8 text-xs" placeholder="0" />
-                            </div>
-                            <div className="col-span-1 space-y-1">
-                                <label className="text-[10px] uppercase font-bold text-slate-500">Vat</label>
-                                <Input type="number" value={itemVat} onChange={(e) => setItemVat(e.target.value === '' ? '' : Number(e.target.value))} className="h-8 text-xs" placeholder="0" />
-                            </div>
-                            <div className="col-span-2 space-y-1 flex items-end justify-between gap-2">
-                                <div className="flex-1">
-                                    <label className="text-[10px] uppercase font-bold text-slate-500">Total</label>
-                                    <div className="h-8 flex items-center px-3 bg-slate-100 rounded border border-slate-200 text-xs font-bold w-full">
-                                        {((Number(qty || 0) * Number(unitPrice || 0)) + Number(itemVat || 0)).toFixed(2)}
-                                    </div>
+                        <div className="p-4 bg-slate-50 border-b border-slate-200">
+                            <div className="grid grid-cols-12 gap-2 items-end">
+                                <div className="col-span-2 space-y-1">
+                                    <label className="text-[10px] uppercase font-bold text-slate-500">Medicine Name <span className="text-red-500">*</span></label>
+                                    <Input value={itemName} readOnly className="bg-slate-100 text-slate-500 h-8 text-xs" />
                                 </div>
-                                {/* Professional Blue Button */}
-                                <Button size="sm" onClick={handleAddItem} className="h-8 bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
-                                    Add
+                                <div className="col-span-1 space-y-1">
+                                    <label className="text-[10px] uppercase font-bold text-slate-500">Strength</label>
+                                    <Input value={strength} onChange={(e) => setStrength(e.target.value)} className="h-8 text-xs" placeholder="25mg" />
+                                </div>
+                                <div className="col-span-1 space-y-1">
+                                    <label className="text-[10px] uppercase font-bold text-slate-500">Type <span className="text-red-500">*</span></label>
+                                    <Input value={type} onChange={(e) => setType(e.target.value)} className="h-8 text-xs" />
+                                </div>
+                                <div className="col-span-1 space-y-1">
+                                    <label className="text-[10px] uppercase font-bold text-slate-500">Mfr. Date</label>
+                                    <Input type="date" value={mfrDate} onChange={(e) => setMfrDate(e.target.value)} className="h-8 text-xs px-1" />
+                                </div>
+                                <div className="col-span-1 space-y-1">
+                                    <label className="text-[10px] uppercase font-bold text-slate-500">Expiry Date</label>
+                                    <Input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} className="h-8 text-xs px-1" />
+                                </div>
+                                <div className="col-span-1 space-y-1">
+                                    <label className="text-[10px] uppercase font-bold text-slate-500">Quantity</label>
+                                    <Input type="number" value={qty} onChange={(e) => setQty(e.target.value === '' ? '' : Number(e.target.value))} className="h-8 text-xs" placeholder="0" />
+                                </div>
+                                <div className="col-span-1 space-y-1">
+                                    <label className="text-[10px] uppercase font-bold text-slate-500">Prod. Unit</label>
+                                    <select className="w-full h-8 text-xs rounded-md border border-slate-200 px-2" value={unit} onChange={(e) => setUnit(e.target.value)}>
+                                        <option>Pcs</option>
+                                        <option>Box</option>
+                                        <option>Strip</option>
+                                        <option>Syrup</option>
+                                        <option>Kg</option>
+                                        <option>Mg</option>
+                                        <option>Gm</option>
+                                        <option>Ltr</option>
+                                    </select>
+                                </div>
+                                <div className="col-span-1 space-y-1">
+                                    <label className="text-[10px] uppercase font-bold text-slate-500">Unit Price</label>
+                                    <Input type="number" value={unitPrice} onChange={(e) => setUnitPrice(e.target.value === '' ? '' : Number(e.target.value))} className="h-8 text-xs" placeholder="0" />
+                                </div>
+                                <div className="col-span-1 space-y-1">
+                                    <label className="text-[10px] uppercase font-bold text-slate-500">MRP/Unit <span className="text-red-500">*</span></label>
+                                    <Input type="number" value={mrp} onChange={(e) => setMrp(e.target.value === '' ? '' : Number(e.target.value))} className="h-8 text-xs" placeholder="0" />
+                                </div>
+                                <div className="col-span-1 space-y-1">
+                                    <label className="text-[10px] uppercase font-bold text-slate-500">Disc(TP%)</label>
+                                    <Input type="number" value={discountPercent} onChange={(e) => setDiscountPercent(e.target.value === '' ? '' : Number(e.target.value))} className="h-8 text-xs" placeholder="0" />
+                                </div>
+                                <div className="col-span-1 space-y-1">
+                                    <label className="text-[10px] uppercase font-bold text-slate-500">VAT</label>
+                                    <Input type="number" value={itemVat} onChange={(e) => setItemVat(e.target.value === '' ? '' : Number(e.target.value))} className="h-8 text-xs" placeholder="0" />
+                                </div>
+                            </div>
+                            <div className="flex justify-end mt-4">
+                                <Button size="sm" onClick={handleAddItem} className="h-9 px-6 bg-blue-600 hover:bg-blue-700 text-white shadow-sm font-semibold">
+                                    Add Item
                                 </Button>
                             </div>
                         </div>
@@ -272,42 +340,46 @@ const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({ isOpen, onClose }) 
                             <table className="w-full text-xs text-left">
                                 <thead className="bg-slate-50 border-b border-slate-200">
                                     <tr>
-                                        <th className="px-4 py-3 font-semibold text-slate-600 w-12">SL</th>
-                                        <th className="px-4 py-3 font-semibold text-slate-600">Medicine Name <span className="text-red-500">*</span></th>
-                                        <th className="px-4 py-3 font-semibold text-slate-600">Strength</th>
-                                        <th className="px-4 py-3 font-semibold text-slate-600">Type <span className="text-red-500">*</span></th>
-                                        <th className="px-4 py-3 text-right font-semibold text-slate-600">Quantity</th>
-                                        <th className="px-4 py-3 font-semibold text-slate-600">Unit</th>
-                                        <th className="px-4 py-3 text-right font-semibold text-slate-600">Unit Price</th>
-                                        <th className="px-4 py-3 text-right font-semibold text-slate-600">MRP</th>
-                                        <th className="px-4 py-3 text-right font-semibold text-slate-600">Trade Price</th>
-                                        <th className="px-4 py-3 text-right font-semibold text-slate-600">Vat</th>
-                                        <th className="px-4 py-3 text-right font-semibold text-slate-600">Total Amount</th>
-                                        <th className="px-4 py-3 text-center font-semibold text-slate-600 w-10"></th>
+                                        <th className="px-3 py-3 font-semibold text-slate-600 w-10">SL</th>
+                                        <th className="px-3 py-3 font-semibold text-slate-600">Medicine Name <span className="text-red-500">*</span></th>
+                                        <th className="px-3 py-3 font-semibold text-slate-600">Strength</th>
+                                        <th className="px-3 py-3 font-semibold text-slate-600">Type <span className="text-red-500">*</span></th>
+                                        <th className="px-3 py-3 font-semibold text-slate-600">Mfr. Date</th>
+                                        <th className="px-3 py-3 font-semibold text-slate-600">Exp. Date</th>
+                                        <th className="px-3 py-3 text-right font-semibold text-slate-600">Qty</th>
+                                        <th className="px-3 py-3 font-semibold text-slate-600">Prod. Unit</th>
+                                        <th className="px-3 py-3 text-right font-semibold text-slate-600">Unit Price</th>
+                                        <th className="px-3 py-3 text-right font-semibold text-slate-600">MRP/Unit <span className="text-red-500">*</span></th>
+                                        <th className="px-3 py-3 text-right font-semibold text-slate-600">Trade Price</th>
+                                        <th className="px-3 py-3 text-right font-semibold text-slate-600">Disc(%)</th>
+                                        <th className="px-3 py-3 text-right font-semibold text-slate-600">VAT</th>
+                                        <th className="px-3 py-3 text-center font-semibold text-slate-600 w-10"></th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
                                     {items.length === 0 ? (
                                         <tr>
-                                            <td colSpan={12} className="px-4 py-8 text-center text-slate-400 italic">
+                                            <td colSpan={14} className="px-4 py-8 text-center text-slate-400 italic">
                                                 No items added yet.
                                             </td>
                                         </tr>
                                     ) : (
                                         items.map((item, idx) => (
                                             <tr key={item.id} className="hover:bg-slate-50 group">
-                                                <td className="px-4 py-2 text-slate-500">{idx + 1}</td>
-                                                <td className="px-4 py-2 font-medium text-slate-800">{item.name}</td>
-                                                <td className="px-4 py-2 text-slate-500">{item.strength || '-'}</td>
-                                                <td className="px-4 py-2 text-slate-500">{item.type}</td>
-                                                <td className="px-4 py-2 text-right text-slate-600">{item.qty}</td>
-                                                <td className="px-4 py-2 text-slate-500">{item.unit}</td>
-                                                <td className="px-4 py-2 text-right text-slate-600">{item.unitPrice.toFixed(2)}</td>
-                                                <td className="px-4 py-2 text-right text-slate-600">{item.mrp.toFixed(2)}</td>
-                                                <td className="px-4 py-2 text-right text-slate-600">{item.tradePrice.toFixed(2)}</td>
-                                                <td className="px-4 py-2 text-right text-slate-600">{item.vat.toFixed(2)}</td>
-                                                <td className="px-4 py-2 text-right font-bold text-slate-700 bg-slate-50/50">{item.totalAmount.toFixed(2)}</td>
-                                                <td className="px-4 py-2 text-center">
+                                                <td className="px-3 py-2 text-slate-500">{idx + 1}</td>
+                                                <td className="px-3 py-2 font-medium text-slate-800">{item.name}</td>
+                                                <td className="px-3 py-2 text-slate-500">{item.strength || '-'}</td>
+                                                <td className="px-3 py-2 text-slate-500">{item.type}</td>
+                                                <td className="px-3 py-2 text-slate-500">{item.mfrDate || '-'}</td>
+                                                <td className="px-3 py-2 text-slate-500">{item.expiryDate || '-'}</td>
+                                                <td className="px-3 py-2 text-right text-slate-600">{item.qty}</td>
+                                                <td className="px-3 py-2 text-slate-500">{item.unit}</td>
+                                                <td className="px-3 py-2 text-right text-slate-600">{item.unitPrice.toFixed(2)}</td>
+                                                <td className="px-3 py-2 text-right text-slate-600">{item.mrp.toFixed(2)}</td>
+                                                <td className="px-3 py-2 text-right text-slate-600">{item.tradePrice.toFixed(2)}</td>
+                                                <td className="px-3 py-2 text-right text-slate-600">{item.discountPercent > 0 ? `${item.discountPercent}%` : '-'}</td>
+                                                <td className="px-3 py-2 text-right text-slate-600">{item.vat.toFixed(2)}</td>
+                                                <td className="px-3 py-2 text-center">
                                                     <button
                                                         onClick={() => handleRemoveItem(item.id)}
                                                         className="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -332,16 +404,16 @@ const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({ isOpen, onClose }) 
                             </div>
                             <div className="flex justify-end p-2 border-b border-slate-100">
                                 <div className="w-64 flex justify-between items-center text-xs">
-                                    <span className="font-semibold text-slate-500">Vat Total:</span>
-                                    <div className="flex gap-2 items-center">
-                                        <Input className="w-24 h-7 text-right text-xs" value={vatTotal.toFixed(2)} readOnly />
-                                    </div>
+                                    <span className="font-semibold text-slate-500">Discount Total:</span>
+                                    <span className="font-bold text-red-500">-{discountTotal.toFixed(2)}</span>
                                 </div>
                             </div>
                             <div className="flex justify-end p-2 border-b border-slate-100">
                                 <div className="w-64 flex justify-between items-center text-xs">
-                                    <span className="font-semibold text-slate-500">Sub Total:</span>
-                                    <span className="font-bold text-slate-700">{subTotal.toFixed(2)}</span>
+                                    <span className="font-semibold text-slate-500">Vat Total:</span>
+                                    <div className="flex gap-2 items-center">
+                                        <Input className="w-24 h-7 text-right text-xs" value={vatTotal.toFixed(2)} readOnly />
+                                    </div>
                                 </div>
                             </div>
                             {/* Neutral/Light Gray Footer Background */}
@@ -374,7 +446,8 @@ const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({ isOpen, onClose }) 
                         © 2025 By 2pi-bd.com
                     </div>
                     <Button className="bg-blue-600 hover:bg-blue-700 text-white gap-2 shadow-sm px-6">
-                        <Plus size={16} /> Save Purchase
+                        <Plus size={16} />
+                        {initialData ? 'Update Purchase' : 'Save Purchase'}
                     </Button>
                 </div>
 

@@ -28,6 +28,7 @@ const Sidebar = () => {
         { icon: ShoppingBag, label: 'Purchase History', href: '/purchase-history' },
         { icon: ShoppingCart, label: 'Sales', href: '/sales' },
         { icon: Users, label: 'Customers', href: '/customers' },
+        { icon: Users, label: 'Suppliers', href: '/suppliers' },
         { icon: BarChart3, label: 'Reports', href: '/reports' },
         { icon: DollarSign, label: 'Profit & Loss', href: '/profit-loss' },
         { icon: TrendingUp, label: 'Trending Products', href: '/trending' },
