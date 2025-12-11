@@ -10,21 +10,47 @@ import { API_ENDPOINTS } from '@/lib/config/api';
 import { Medicine, Rack, GenericName, Supplier } from '@/lib/types';
 import { mockMedicines, mockRacks, mockGenerics } from '@/lib/data/mockData';
 
-const USE_MOCK_DATA = true; // Toggle for development
+const USE_MOCK_DATA = false; // Toggle for development
 
 export const medicineService = {
     /**
      * Get all medicines
      */
-    async getAll(): Promise<Medicine[]> {
+    async getAll(
+        page: number = 1,
+        limit: number = 20,
+        search: string = '',
+        status: string = '',
+        rack: string = ''
+    ): Promise<{ data: Medicine[]; pagination?: any }> {
         if (USE_MOCK_DATA) {
+            // ... kept for fallback if needed, but we are switching off
             return new Promise((resolve) => {
-                setTimeout(() => resolve(mockMedicines), 300);
+                // Simple mock filtering could go here, but we are relying on API now
+                setTimeout(() => resolve({ data: mockMedicines, pagination: { currentPage: 1, totalPages: 1, totalItems: mockMedicines.length } }), 300);
             });
         }
 
-        const response = await apiClient.get<Medicine[]>(API_ENDPOINTS.MEDICINES);
-        return response.success && response.data ? response.data : mockMedicines;
+        const queryParams = new URLSearchParams({
+            page: page.toString(),
+            limit: limit.toString(),
+            search,
+            status: status === 'all' ? '' : status,
+            rack
+        });
+
+        const response = await apiClient.get<any>(`${API_ENDPOINTS.MEDICINES}?${queryParams.toString()}`);
+
+        // The API returns { success: true, data: [...], pagination: {...} }
+        // apiClient wraps this in { success: true, data: { ...body } }
+        if (response.success && response.data) {
+            return {
+                data: response.data.data || [],
+                pagination: response.data.pagination
+            };
+        }
+
+        return { data: [], pagination: null };
     },
 
     /**
@@ -139,8 +165,14 @@ export const medicineService = {
             return Promise.resolve(mockRacks);
         }
 
-        const response = await apiClient.get<Rack[]>(API_ENDPOINTS.RACKS);
-        return response.success && response.data ? response.data : mockRacks;
+        const response = await apiClient.get<any[]>(API_ENDPOINTS.RACKS);
+        if (response.success && Array.isArray(response.data)) {
+            return response.data.map((item: any) => ({
+                id: item.id,
+                name: item.rack_name || item.name || 'Unknown Rack'
+            }));
+        }
+        return mockRacks;
     },
 
     /**
@@ -151,8 +183,14 @@ export const medicineService = {
             return Promise.resolve(mockGenerics);
         }
 
-        const response = await apiClient.get<GenericName[]>(API_ENDPOINTS.GENERICS);
-        return response.success && response.data ? response.data : mockGenerics;
+        const response = await apiClient.get<any[]>(API_ENDPOINTS.GENERICS);
+        if (response.success && Array.isArray(response.data)) {
+            return response.data.map((item: any) => ({
+                id: item.id,
+                name: item.generic_name || item.name || 'Unknown Generic'
+            }));
+        }
+        return mockGenerics;
     },
 
     /**

@@ -10,7 +10,7 @@ import { API_ENDPOINTS } from '@/lib/config/api';
 import { DashboardStats, Follower } from '@/lib/types';
 import { mockDashboardStats, mockFollowers } from '@/lib/data/mockData';
 
-const USE_MOCK_DATA = true; // Toggle for development
+const USE_MOCK_DATA = false; // Toggle for development
 
 export const dashboardService = {
     /**

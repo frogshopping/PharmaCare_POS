@@ -48,14 +48,23 @@ export default function InventoryPage() {
     const [editingProduct, setEditingProduct] = useState<Medicine | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
     const [statusFilter, setStatusFilter] = useState<'all' | 'low' | 'out' | 'top-selling' | 'low-selling'>('all');
+
+    // === Stats State ===
+    const [stats, setStats] = useState({
+        total: 0,
+        lowStock: 0,
+        outOfStock: 0,
+        goodStock: 0
+    });
 
     // === Rack View State ===
     const [rackData, setRackData] = useState<DummyRackCategory[]>([]);
     const [selectedCategory, setSelectedCategory] = useState<DummyRackCategory | null>(null);
     const [selectedRackMedicine, setSelectedRackMedicine] = useState<DummyMedicine | null>(null); // For rack view
-    const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(null); // For list view - now uses Medicine type directly
-
+    const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(null); // For list view
 
     const itemsPerPage = 20;
 
@@ -65,11 +74,43 @@ export default function InventoryPage() {
             setLoading(true);
             setError(null);
 
-            // Fetch Inventory Data
-            const inventoryData = await getMedicines();
-            setMedicines(inventoryData);
+            // Fetch Inventory Data with Pagination & Filtering
+            // Cast to compatibility type if needed, but updated service returns { data, pagination }
+            const result: any = await getMedicines(currentPage, itemsPerPage, searchQuery, statusFilter);
 
-            // Fetch Rack Data (Simulated)
+            // Handle both legacy (array) and new (object) return types for safety
+            const fetchedMedicines = Array.isArray(result) ? result : (result.data || []);
+            const paginationInfo = !Array.isArray(result) ? result.pagination : null;
+
+            setMedicines(fetchedMedicines);
+
+            if (paginationInfo) {
+                setTotalPages(paginationInfo.totalPages);
+                setTotalItems(paginationInfo.totalItems);
+            } else {
+                // Fallback if API returns plain array
+                setTotalPages(1);
+                setTotalItems(fetchedMedicines.length);
+            }
+
+            // Fetch Stats (Parallel Requests Approximation)
+            // Only fetch if we are on the first page to save bandwidth, or periodically? 
+            // For now, fetch on every load to ensure accuracy.
+            const [lowStockRes, outOfStockRes, allRes] = await Promise.all([
+                // fetch total counts for stats
+                getMedicines(1, 1, '', 'low').catch(() => ({ pagination: { totalItems: 0 } })),
+                getMedicines(1, 1, '', 'out').catch(() => ({ pagination: { totalItems: 0 } })),
+                getMedicines(1, 1, '', 'all').catch(() => ({ pagination: { totalItems: 0 } })) // total count
+            ]);
+
+            setStats({
+                total: (allRes as any).pagination?.totalItems || 0,
+                lowStock: (lowStockRes as any).pagination?.totalItems || 0,
+                outOfStock: (outOfStockRes as any).pagination?.totalItems || 0,
+                goodStock: ((allRes as any).pagination?.totalItems || 0) - ((lowStockRes as any).pagination?.totalItems || 0) - ((outOfStockRes as any).pagination?.totalItems || 0)
+            });
+
+            // Fetch Rack Data (Simulated for now, as API doesn't support visual rack view yet)
             const racks = getDummyRackData();
             setRackData(racks);
 
@@ -83,54 +124,58 @@ export default function InventoryPage() {
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [currentPage, statusFilter, searchQuery]); // Re-fetch when these change
 
     // === Derived Stats (Shared) ===
-    const stats = useMemo(() => {
-        return {
-            total: medicines.length,
-            lowStock: medicines.filter(m => m.inStock > 0 && m.inStock < 20).length,
-            outOfStock: medicines.filter(m => m.inStock === 0).length,
-            goodStock: medicines.filter(m => m.inStock >= 20).length
-        };
-    }, [medicines]);
+    // This useMemo is no longer needed as stats are fetched directly
+    // const stats = useMemo(() => {
+    //     return {
+    //         total: medicines.length,
+    //         lowStock: medicines.filter(m => m.inStock > 0 && m.inStock < 20).length,
+    //         outOfStock: medicines.filter(m => m.inStock === 0).length,
+    //         goodStock: medicines.filter(m => m.inStock >= 20).length
+    //     };
+    // }, [medicines]);
 
     // === Filtering Logic (List View) ===
-    const filteredMedicines = useMemo(() => {
-        let filtered = [...medicines];
+    // This is now handled by the API call in fetchData
+    // const filteredMedicines = useMemo(() => {
+    //     let filtered = [...medicines];
 
-        if (statusFilter === 'low') filtered = filtered.filter(m => m.inStock > 0 && m.inStock < 20);
-        else if (statusFilter === 'out') filtered = filtered.filter(m => m.inStock === 0);
+    //     if (statusFilter === 'low') filtered = filtered.filter(m => m.inStock > 0 && m.inStock < 20);
+    //     else if (statusFilter === 'out') filtered = filtered.filter(m => m.inStock === 0);
 
-        if (searchQuery) {
-            const lowerQuery = searchQuery.toLowerCase();
-            filtered = filtered.filter(m =>
-                m.name.toLowerCase().includes(lowerQuery) ||
-                m.barcode.toLowerCase().includes(lowerQuery) ||
-                m.productCode.toLowerCase().includes(lowerQuery)
-            );
-        }
+    //     if (searchQuery) {
+    //         const lowerQuery = searchQuery.toLowerCase();
+    //         filtered = filtered.filter(m =>
+    //             m.name.toLowerCase().includes(lowerQuery) ||
+    //             m.barcode.toLowerCase().includes(lowerQuery) ||
+    //             m.productCode.toLowerCase().includes(lowerQuery)
+    //         );
+    //     }
 
-        // Sorting for Top/Low Selling
-        if (statusFilter === 'top-selling') {
-            filtered.sort((a, b) => b.totalSold - a.totalSold);
-        } else if (statusFilter === 'low-selling') {
-            filtered.sort((a, b) => a.totalSold - b.totalSold);
-        }
+    //     // Sorting for Top/Low Selling
+    //     if (statusFilter === 'top-selling') {
+    //         filtered.sort((a, b) => b.totalSold - a.totalSold);
+    //     } else if (statusFilter === 'low-selling') {
+    //         filtered.sort((a, b) => a.totalSold - b.totalSold);
+    //     }
 
-        return filtered;
-    }, [medicines, statusFilter, searchQuery]);
+    //     return filtered;
+    // }, [medicines, statusFilter, searchQuery]);
 
     // === Pagination (List View) ===
-    const paginatedMedicines = useMemo(() => {
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        return filteredMedicines.slice(startIndex, startIndex + itemsPerPage);
-    }, [filteredMedicines, currentPage]);
-    const totalPages = Math.ceil(filteredMedicines.length / itemsPerPage);
-    useEffect(() => setCurrentPage(1), [statusFilter, searchQuery, viewMode]);
+    // This is now handled by the API call in fetchData
+    // const paginatedMedicines = useMemo(() => {
+    //     const startIndex = (currentPage - 1) * itemsPerPage;
+    //     return filteredMedicines.slice(startIndex, startIndex + itemsPerPage);
+    // }, [filteredMedicines, currentPage]);
+    // const totalPages = Math.ceil(filteredMedicines.length / itemsPerPage);
+    // useEffect(() => setCurrentPage(1), [statusFilter, searchQuery, viewMode]);
 
 
-    // === Filtering Logic (Rack View) ===
+    // === Filtering Logic (Rack View Only) ===
+    // List view filtering is now Server-Side
     const filteredRacks = useMemo(() => {
         if (!searchQuery) return rackData;
 
@@ -158,13 +203,14 @@ export default function InventoryPage() {
     const clearFilters = () => {
         setSearchQuery('');
         setStatusFilter('all');
+        setCurrentPage(1);
     };
 
     const handleDelete = async (medicine: Medicine) => {
         if (!confirm(`Are you sure you want to delete ${medicine.name}?`)) return;
         try {
             await deleteMedicine(medicine.id);
-            setMedicines(prev => prev.filter(m => m.id !== medicine.id));
+            fetchData(); // Reload data
         } catch (error) {
             console.error('Failed to delete medicine:', error);
             alert('Failed to delete medicine');
@@ -173,10 +219,10 @@ export default function InventoryPage() {
 
     const handleAddSuccess = () => fetchData();
     const handleEditSuccess = (updatedProduct: Partial<Medicine> & { id: string }) => {
-        setMedicines(prev => prev.map(m => m.id === updatedProduct.id ? { ...m, ...updatedProduct } : m));
-        setIsEditProductOpen(false);
-        setEditingProduct(null);
-        fetchData();
+        // setMedicines(prev => prev.map(m => m.id === updatedProduct.id ? { ...m, ...updatedProduct } : m));
+        // setIsEditProductOpen(false);
+        // setEditingProduct(null);
+        fetchData(); // Reload data after edit
     };
 
     // Handler for Rack Grid Items (DummyMedicine type)
@@ -211,12 +257,11 @@ export default function InventoryPage() {
 
     // Handler for Inventory List Items (Medicine type from API)
     const handleListMedicineView = (medicine: Medicine) => {
-        // Directly use the Medicine type - no conversion needed
         setSelectedMedicine(medicine);
     };
 
 
-    const hasActiveFilters = searchQuery || statusFilter !== 'all';
+    const hasActiveFilters = searchQuery !== '' || statusFilter !== 'all';
 
 
     return (
@@ -306,16 +351,6 @@ export default function InventoryPage() {
                                     medicines={medicines}
                                     onSelect={(selectedMed: Medicine) => {
                                         setSearchQuery(selectedMed.name);
-                                        // Optional: You could directly filter to just this ID or Name+Strength here
-                                        // For now, setting search query to name + strength might be enough if the main filter handles it
-                                        // But the main filter uses `includes`, so "Calbo-D (500mg)" might not match exactly if checking raw fields.
-                                        // A better approach is to let the table filter by the selected ID or precise Name/Strength.
-                                        // Let's stick to name for now, or we can improve the main filter.
-
-                                        // Actually, let's just set the query to the Name. 
-                                        // To be precise with strength, we might need a dedicated filter state.
-                                        // But the prompt asks to "show ... periodically", effectively a dropdown picker.
-                                        // Clicking it essentially "picks" it.
                                     }}
                                     onClear={clearFilters}
                                 />
@@ -340,7 +375,10 @@ export default function InventoryPage() {
                                 <select
                                     className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-600"
                                     value={statusFilter}
-                                    onChange={(e) => setStatusFilter(e.target.value as any)}
+                                    onChange={(e) => {
+                                        setStatusFilter(e.target.value as any);
+                                        setCurrentPage(1); // Reset page on filter change
+                                    }}
                                 >
                                     <option value="all">All Products</option>
                                     <option value="top-selling">Top Selling</option>
@@ -366,7 +404,7 @@ export default function InventoryPage() {
                 {/* === Main Content === */}
                 <div className="flex-1 overflow-y-auto px-8 pb-8 custom-scrollbar">
                     <div className="max-w-[1600px] mx-auto">
-                        {loading ? (
+                        {loading && medicines.length === 0 ? (
                             <div className="flex justify-center p-24">
                                 <div className="flex flex-col items-center gap-4">
                                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -385,10 +423,10 @@ export default function InventoryPage() {
                                 {/* LIST VIEW */}
                                 {viewMode === 'list' && (
                                     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col min-h-[500px]">
-                                        {paginatedMedicines.length > 0 ? (
+                                        {medicines.length > 0 ? (
                                             <>
                                                 <MedicineTable
-                                                    medicines={paginatedMedicines}
+                                                    medicines={medicines}
                                                     onRetail={(medicine) => console.log('Retail:', medicine)}
                                                     onEdit={(medicine) => {
                                                         setEditingProduct(medicine);
@@ -402,7 +440,7 @@ export default function InventoryPage() {
                                                         currentPage={currentPage}
                                                         totalPages={totalPages}
                                                         itemsPerPage={itemsPerPage}
-                                                        totalItems={filteredMedicines.length}
+                                                        totalItems={totalItems}
                                                         onPageChange={setCurrentPage}
                                                     />
                                                 </div>

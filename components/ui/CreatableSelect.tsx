@@ -31,7 +31,8 @@ export function CreatableSelect({
     const [inputValue, setInputValue] = React.useState("")
     const containerRef = React.useRef<HTMLDivElement>(null)
 
-    const selectedOption = options.find(opt => opt.name === value || opt.id === value)
+    const safeOptions = Array.isArray(options) ? options : [];
+    const selectedOption = safeOptions.find(opt => opt.name === value || opt.id === value)
 
     React.useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -43,7 +44,7 @@ export function CreatableSelect({
         return () => document.removeEventListener("mousedown", handleClickOutside)
     }, [])
 
-    const filteredOptions = options.filter(opt =>
+    const filteredOptions = safeOptions.filter(opt =>
         opt.name.toLowerCase().includes(inputValue.toLowerCase())
     )
 

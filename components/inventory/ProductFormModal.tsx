@@ -92,43 +92,102 @@ export function ProductFormModal(props: ProductFormModalProps) {
         handleChange('category', name)
     }
 
-    const { formData, handleChange, handleReset, isSubmitting, setSubmitting } = useFormState({
-        productName: product?.name || "",
-        description: product?.description || "",
-        power: product?.strength || "",
-        generic: product?.genericName || "",
-        manufacturer: product?.manufacture || "",
-        supplier: product?.supplier || "",
-        supplierPhone: product?.supplierContact || "",
-        rack: product?.rackNo || product?.rackLocation || "",
-        stock: product?.inStock || 0,
+    // Initialize or Reset form when product changes
+    const { formData, handleChange, handleReset, isSubmitting, setFormData, setSubmitting } = useFormState({
+        productName: "",
+        description: "",
+        power: "",
+        generic: "",
+        manufacturer: "",
+        supplier: "",
+        supplierPhone: "",
+        rack: "",
+        stock: 0,
         stockUnit: "unit" as "unit" | "strip" | "box",
-        stockQuantity: product?.inStock || 0,
-        productType: product?.type || "",
-
-        // Packaging (defined once)
-        stripSize: product?.packSize?.strip || 0,
-        boxSize: product?.packSize?.box || 0,
-
-        // Buying prices
-        buyingUnitPrice: product?.buyingPrice || 0,
+        stockQuantity: 0,
+        productType: "",
+        stripSize: 0,
+        boxSize: 0,
+        buyingUnitPrice: 0,
         buyingStripPrice: 0,
         buyingBoxPrice: 0,
-
-        // MRP & Profit Margin
-        mrpUnitPrice: product?.mrp || product?.price || 0,
-        profitMargin: product?.profitMargin || product?.discount || 0, // Prefer profitMargin field
-
-        // Selling prices (auto-calculated)
-        sellingUnitPrice: product?.price || 0,
-        sellingStripPrice: product?.packPrice?.strip || 0,
-        sellingBoxPrice: product?.packPrice?.box || 0,
-
-        // New Fields
-        productCode: product?.productCode || "", // Auto-generate if empty
-        category: product?.category || "",
-        stockAlert: product?.stockAlert || 10,
+        mrpUnitPrice: 0,
+        profitMargin: 0,
+        sellingUnitPrice: 0,
+        sellingStripPrice: 0,
+        sellingBoxPrice: 0,
+        productCode: "",
+        category: "",
+        stockAlert: 10,
     })
+
+    React.useEffect(() => {
+        if (product) {
+            setFormData({
+                productName: product.name || "",
+                description: product.description || "",
+                power: product.strength || "",
+                generic: product.genericName || "",
+                manufacturer: product.manufacture || "",
+                supplier: product.supplier || "",
+                supplierPhone: product.supplierContact || "",
+                rack: product.rackNo || product.rackLocation || "",
+                stock: product.inStock || 0,
+                stockUnit: "unit",
+                stockQuantity: product.inStock || 0,
+                productType: product.type || "",
+
+                // Packaging
+                stripSize: product.packSize?.strip || 0,
+                boxSize: product.packSize?.box || 0,
+
+                // Prices
+                buyingUnitPrice: product.buyingPrice || 0,
+                buyingStripPrice: 0, // Recalculate if needed
+                buyingBoxPrice: 0,
+
+                mrpUnitPrice: product.mrp || product.price || 0,
+                profitMargin: product.profitMargin || product.discount || 0,
+
+                sellingUnitPrice: product.price || 0,
+                sellingStripPrice: product.packPrice?.strip || 0,
+                sellingBoxPrice: product.packPrice?.box || 0,
+
+                productCode: product.productCode || "",
+                category: product.category || "",
+                stockAlert: product.stockAlert || 10,
+            });
+        } else if (!isEditMode && isOpen) {
+            // Reset to defaults for Add mode
+            setFormData({
+                productName: "",
+                description: "",
+                power: "",
+                generic: "",
+                manufacturer: "",
+                supplier: "",
+                supplierPhone: "",
+                rack: "",
+                stock: 0,
+                stockUnit: "unit",
+                stockQuantity: 0,
+                productType: "",
+                stripSize: 0,
+                boxSize: 0,
+                buyingUnitPrice: 0,
+                buyingStripPrice: 0,
+                buyingBoxPrice: 0,
+                mrpUnitPrice: 0,
+                profitMargin: 0,
+                sellingUnitPrice: 0,
+                sellingStripPrice: 0,
+                sellingBoxPrice: 0,
+                productCode: "",
+                category: "",
+                stockAlert: 10,
+            });
+        }
+    }, [product, isOpen, isEditMode, setFormData]);
 
     const needsPackaging = formData.productType === 'Tablet' || formData.productType === 'Capsule';
 
@@ -150,58 +209,6 @@ export function ProductFormModal(props: ProductFormModalProps) {
     };
 
     // Auto-update stock when stockQuantity or stockUnit changes
-    React.useEffect(() => {
-        if (needsPackaging) {
-            handleChange('stock', calculateTotalUnits());
-        }
-    }, [formData.stockQuantity, formData.stockUnit, formData.stripSize, formData.boxSize, needsPackaging]);
-
-    // Auto-calculate buying strip and box prices
-    React.useEffect(() => {
-        if (needsPackaging && formData.buyingUnitPrice && formData.stripSize) {
-            const stripPrice = formData.buyingUnitPrice * formData.stripSize;
-            handleChange('buyingStripPrice', parseFloat(stripPrice.toFixed(2)));
-
-            if (formData.boxSize) {
-                const boxPrice = stripPrice * formData.boxSize;
-                handleChange('buyingBoxPrice', parseFloat(boxPrice.toFixed(2)));
-            }
-        }
-    }, [formData.buyingUnitPrice, formData.stripSize, formData.boxSize, needsPackaging]);
-
-    // Auto-calculate properties
-    // Logic: 
-    // 1. Selling Price = MRP (assuming no discount to customer by default)
-    // 2. Profit Margin = ((MRP - Cost) / MRP) * 100
-    React.useEffect(() => {
-        // Always sync Selling Price with MRP if MRP is set
-        if (formData.mrpUnitPrice) {
-            handleChange('sellingUnitPrice', formData.mrpUnitPrice);
-
-            // Calculate Profit Margin
-            if (formData.buyingUnitPrice > 0 && formData.mrpUnitPrice > 0) {
-                const margin = ((formData.mrpUnitPrice - formData.buyingUnitPrice) / formData.mrpUnitPrice) * 100;
-                handleChange('profitMargin', parseFloat(margin.toFixed(2)));
-            } else {
-                handleChange('profitMargin', 0);
-            }
-        }
-
-        // Calculate Strip/Box prices based on the sellingUnitPrice (MRP)
-        const currentSellingPrice = formData.mrpUnitPrice || formData.sellingUnitPrice || 0;
-
-        if (needsPackaging && formData.stripSize) {
-            const sellingStrip = currentSellingPrice * formData.stripSize;
-            handleChange('sellingStripPrice', parseFloat(sellingStrip.toFixed(2)));
-
-            if (formData.boxSize) {
-                const sellingBox = sellingStrip * formData.boxSize;
-                handleChange('sellingBoxPrice', parseFloat(sellingBox.toFixed(2)));
-            }
-        }
-    }, [formData.mrpUnitPrice, formData.buyingUnitPrice, formData.stripSize, formData.boxSize, needsPackaging]);
-
-    // Fetch racks and generics, and prefill manufacturer/supplier for edit mode
     React.useEffect(() => {
         if (isOpen) {
             Promise.all([
@@ -332,6 +339,7 @@ export function ProductFormModal(props: ProductFormModalProps) {
 
         setSubmitting(true)
 
+
         try {
             const payload = {
                 name: formData.productName,
@@ -342,19 +350,22 @@ export function ProductFormModal(props: ProductFormModalProps) {
                 supplier: formData.supplier,
                 supplierContact: formData.supplierPhone,
                 rackNo: formData.rack,
-                rackLocation: formData.rack, // Also set rackLocation for display consistency
+                rackLocation: formData.rack,
                 inStock: formData.stock,
                 price: formData.sellingUnitPrice,
-                mrp: formData.mrpUnitPrice, // Store MRP
-                discount: formData.profitMargin, // Store Profit Margin in discount field for schema compatibility if needed, or update schema later.
+                mrp: formData.mrpUnitPrice,
                 buyingPrice: formData.buyingUnitPrice,
+                discount: formData.profitMargin || 0,
                 type: formData.productType as any,
-                stockStatus: formData.stock === 0 ? 'Low Stock' as const : formData.stock < 20 ? 'Stock Alert' as const : 'Normal' as const,
-                // New Fields Mapping
-                productCode: formData.productCode || `P-${Date.now()}`,
-                category: formData.category,
-                stockAlert: formData.stockAlert,
-                status: 'Active', // Default to Active as field is removed
+                stockStatus: (formData.stock === 0 ? 'Low Stock' : formData.stock < 20 ? 'Stock Alert' : 'Normal') as 'Low Stock' | 'Stock Alert' | 'Normal',
+                status: 'Active', // Ensure backend has this column or ignore it
+
+                // Fields that must be present
+                productCode: formData.productCode || `P-${Math.floor(Math.random() * 10000)}`,
+                category: formData.category || 'Medicine',
+                stockAlert: formData.stockAlert || 10,
+                expiryDate: new Date().toISOString(), // Add default if missing
+
                 ...(needsPackaging && {
                     packSize: {
                         strip: formData.stripSize,
@@ -378,7 +389,7 @@ export function ProductFormModal(props: ProductFormModalProps) {
             handleReset()
         } catch (error) {
             console.error(`Failed to ${isEditMode ? 'update' : 'create'} product:`, error)
-            alert(`Failed to ${isEditMode ? 'update' : 'create'} product. Please try again.`)
+            alert(`Failed to ${isEditMode ? 'update' : 'create'} product. The server might be down or rejected the data.`)
         } finally {
             setSubmitting(false)
         }
