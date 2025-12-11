@@ -21,6 +21,15 @@ interface MedicineDetailsModalProps {
 // Helper to normalize data from both types
 function normalizeData(med: MedicineData) {
     const isMedicineType = 'id' in med;
+    const buyingPrice = isMedicineType ? (med as Medicine).buyingPrice : (med as DummyMedicine).tradePrice;
+    const sellingPrice = isMedicineType ? (med as Medicine).price : (med as DummyMedicine).sellingPrice;
+
+    // Calculate profit margin
+    let profitMargin = 0;
+    if (buyingPrice && buyingPrice > 0) {
+        profitMargin = ((sellingPrice - buyingPrice) / buyingPrice) * 100;
+    }
+
     return {
         id: isMedicineType ? (med as Medicine).id : undefined,
         srlNo: isMedicineType ? (med as Medicine).srlNo : 0,
@@ -32,10 +41,10 @@ function normalizeData(med: MedicineData) {
         productCode: med.productCode || 'N/A',
         barcode: isMedicineType ? (med as Medicine).barcode : undefined,
         description: isMedicineType ? (med as Medicine).description : undefined,
-        buyingPrice: isMedicineType ? (med as Medicine).buyingPrice : (med as DummyMedicine).tradePrice,
-        sellingPrice: isMedicineType ? (med as Medicine).price : (med as DummyMedicine).sellingPrice,
+        buyingPrice,
+        sellingPrice,
         mrp: isMedicineType ? (med as Medicine).mrp : undefined,
-        discount: isMedicineType ? (med as Medicine).discount : undefined,
+        profitMargin,
         wholesalePrice: !isMedicineType ? (med as DummyMedicine).wholesalePrice : undefined,
         inStock: med.inStock,
         rackLocation: isMedicineType ? ((med as Medicine).rackLocation || (med as Medicine).rackNo) : undefined,
@@ -146,10 +155,7 @@ const MedicineDetailsModal: React.FC<MedicineDetailsModalProps> = ({ medicine, o
                                             <InfoRow label="Selling Price" value={`${data.sellingPrice?.toFixed(2)} BDT`} highlight />
                                         </div>
                                         {data.mrp && <InfoRow label="MRP" value={`${data.mrp.toFixed(2)} BDT`} />}
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <InfoRow label="Vat" value={`${0}%`} />
-                                            <InfoRow label="Discount" value={`${data.discount || 0}%`} />
-                                        </div>
+                                        <InfoRow label="Profit Margin" value={`${data.profitMargin?.toFixed(2)}%`} />
                                         <div className="pt-2 border-t border-slate-50">
                                             <div className="flex justify-between items-center">
                                                 <span className="text-sm font-medium text-slate-500">Current Stock</span>

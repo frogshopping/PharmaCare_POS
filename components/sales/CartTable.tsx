@@ -9,7 +9,6 @@ export interface CartItem {
     quantity: number;
     unitPrice: number;
     unit: string; // 'pcs' | 'box' | 'strip'
-    vat: number; // Percentage
     // Calculated fields
     totalPrice: number;
 }
@@ -45,7 +44,6 @@ export function CartTable({ items, onUpdateQuantity, onRemoveItem, onUpdatePrice
                         <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase text-center w-24">In Stock</th>
                         <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase text-center w-32">Quantity</th>
                         <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase text-right w-24">Unit Price</th>
-                        <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase text-right w-20">Vat</th>
                         <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase text-right w-28">Total Price</th>
                     </tr>
                 </thead>
@@ -110,9 +108,6 @@ export function CartTable({ items, onUpdateQuantity, onRemoveItem, onUpdatePrice
                                     onChange={(e) => onUpdatePrice(item.id, parseFloat(e.target.value) || 0)}
                                     className="w-20 text-right text-sm border-b border-transparent focus:border-blue-500 focus:outline-none bg-transparent"
                                 />
-                            </td>
-                            <td className="px-4 py-3 text-right text-sm text-slate-600">
-                                {item.vat}%
                             </td>
                             <td className="px-4 py-3 text-right font-bold text-slate-800">
                                 ${item.totalPrice.toFixed(2)}

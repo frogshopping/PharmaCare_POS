@@ -25,7 +25,6 @@ interface NewItem {
     mrp: number;
     tradePrice: number;
     discountPercent: number;
-    vat: number;
     totalAmount: number;
 }
 
@@ -53,7 +52,6 @@ const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({ isOpen, onClose, in
     const [unitPrice, setUnitPrice] = useState<number | ''>('');
     const [mrp, setMrp] = useState<number | ''>('');
     const [discountPercent, setDiscountPercent] = useState<number | ''>('');
-    const [itemVat, setItemVat] = useState<number | ''>(0);
 
     // Populate data for Edit Mode
     useEffect(() => {
@@ -79,7 +77,6 @@ const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({ isOpen, onClose, in
                 mrp: 0, // Default
                 tradePrice: item.qty * item.unitPrice,
                 discountPercent: 0, // Default
-                vat: 0, // Default
                 totalAmount: item.total
             }));
             setItems(mappedItems);
@@ -104,12 +101,11 @@ const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({ isOpen, onClose, in
 
         const q = Number(qty);
         const p = Number(unitPrice);
-        const v = Number(itemVat || 0);
         const dPercent = Number(discountPercent || 0);
 
         const trade = q * p;
         const discountAmount = trade * (dPercent / 100);
-        const total = (trade - discountAmount) + v;
+        const total = trade - discountAmount;
 
         const newItem: NewItem = {
             id: Date.now(),
@@ -124,7 +120,6 @@ const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({ isOpen, onClose, in
             mrp: Number(mrp || 0),
             tradePrice: trade,
             discountPercent: dPercent,
-            vat: v,
             totalAmount: total
         };
 
@@ -137,7 +132,6 @@ const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({ isOpen, onClose, in
         setUnitPrice('');
         setMrp('');
         setDiscountPercent('');
-        setItemVat(0);
         // Keep dates or reset? Usually reset for new item or keep same batch? Resetting is safer.
         setMfrDate('');
         setExpiryDate('');
@@ -149,9 +143,8 @@ const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({ isOpen, onClose, in
 
     // Footer Calculations
     const subTradeTotal = items.reduce((sum, item) => sum + item.tradePrice, 0);
-    const vatTotal = items.reduce((sum, item) => sum + item.vat, 0);
     const discountTotal = items.reduce((sum, item) => sum + (item.tradePrice * (item.discountPercent / 100)), 0);
-    const subTotal = subTradeTotal - discountTotal + vatTotal;
+    const subTotal = subTradeTotal - discountTotal;
     const grandTotal = subTotal;
 
     return (
@@ -323,10 +316,6 @@ const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({ isOpen, onClose, in
                                     <label className="text-[10px] uppercase font-bold text-slate-500">Disc(TP%)</label>
                                     <Input type="number" value={discountPercent} onChange={(e) => setDiscountPercent(e.target.value === '' ? '' : Number(e.target.value))} className="h-8 text-xs" placeholder="0" />
                                 </div>
-                                <div className="col-span-1 space-y-1">
-                                    <label className="text-[10px] uppercase font-bold text-slate-500">VAT</label>
-                                    <Input type="number" value={itemVat} onChange={(e) => setItemVat(e.target.value === '' ? '' : Number(e.target.value))} className="h-8 text-xs" placeholder="0" />
-                                </div>
                             </div>
                             <div className="flex justify-end mt-4">
                                 <Button size="sm" onClick={handleAddItem} className="h-9 px-6 bg-blue-600 hover:bg-blue-700 text-white shadow-sm font-semibold">
@@ -352,14 +341,13 @@ const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({ isOpen, onClose, in
                                         <th className="px-3 py-3 text-right font-semibold text-slate-600">MRP/Unit <span className="text-red-500">*</span></th>
                                         <th className="px-3 py-3 text-right font-semibold text-slate-600">Trade Price</th>
                                         <th className="px-3 py-3 text-right font-semibold text-slate-600">Disc(%)</th>
-                                        <th className="px-3 py-3 text-right font-semibold text-slate-600">VAT</th>
                                         <th className="px-3 py-3 text-center font-semibold text-slate-600 w-10"></th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
                                     {items.length === 0 ? (
                                         <tr>
-                                            <td colSpan={14} className="px-4 py-8 text-center text-slate-400 italic">
+                                            <td colSpan={13} className="px-4 py-8 text-center text-slate-400 italic">
                                                 No items added yet.
                                             </td>
                                         </tr>
@@ -378,7 +366,6 @@ const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({ isOpen, onClose, in
                                                 <td className="px-3 py-2 text-right text-slate-600">{item.mrp.toFixed(2)}</td>
                                                 <td className="px-3 py-2 text-right text-slate-600">{item.tradePrice.toFixed(2)}</td>
                                                 <td className="px-3 py-2 text-right text-slate-600">{item.discountPercent > 0 ? `${item.discountPercent}%` : '-'}</td>
-                                                <td className="px-3 py-2 text-right text-slate-600">{item.vat.toFixed(2)}</td>
                                                 <td className="px-3 py-2 text-center">
                                                     <button
                                                         onClick={() => handleRemoveItem(item.id)}
@@ -406,14 +393,6 @@ const AddPurchaseModal: React.FC<AddPurchaseModalProps> = ({ isOpen, onClose, in
                                 <div className="w-64 flex justify-between items-center text-xs">
                                     <span className="font-semibold text-slate-500">Discount Total:</span>
                                     <span className="font-bold text-red-500">-{discountTotal.toFixed(2)}</span>
-                                </div>
-                            </div>
-                            <div className="flex justify-end p-2 border-b border-slate-100">
-                                <div className="w-64 flex justify-between items-center text-xs">
-                                    <span className="font-semibold text-slate-500">Vat Total:</span>
-                                    <div className="flex gap-2 items-center">
-                                        <Input className="w-24 h-7 text-right text-xs" value={vatTotal.toFixed(2)} readOnly />
-                                    </div>
                                 </div>
                             </div>
                             {/* Neutral/Light Gray Footer Background */}

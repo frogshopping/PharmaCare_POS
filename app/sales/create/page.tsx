@@ -235,6 +235,8 @@ export default function CreateSalePage() {
                                 <ProductSearch
                                     onSearch={handleSearchProduct}
                                     onSelectHelper={handleSelectHelper}
+                                    medicines={medicines}
+                                    onSelect={(med) => addToCart(med)}
                                 />
                                 <CartTable
                                     items={cartItems}

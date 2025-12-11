@@ -32,6 +32,7 @@ import RackDetailModal from '@/components/medicine-rack/RackDetailModal';
 import MedicineDetailsModal from '@/components/medicine-rack/MedicineDetailsModal';
 import KeyLegendModal from '@/components/medicine-rack/KeyLegendModal';
 import { getDummyRackData, DummyRackCategory, DummyMedicine } from '@/services/rackDummyData';
+import { SearchWithSuggestions } from '@/components/inventory/SearchWithSuggestions';
 
 export default function InventoryPage() {
     // === Shared State ===
@@ -47,13 +48,7 @@ export default function InventoryPage() {
     const [editingProduct, setEditingProduct] = useState<Medicine | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
-    const [statusFilter, setStatusFilter] = useState<'all' | 'low' | 'out'>('all');
-    const [showFilters, setShowFilters] = useState(false);
-    const [filters, setFilters] = useState({
-        strength: '',
-        manufacturer: '',
-        genericName: ''
-    });
+    const [statusFilter, setStatusFilter] = useState<'all' | 'low' | 'out' | 'top-selling' | 'low-selling'>('all');
 
     // === Rack View State ===
     const [rackData, setRackData] = useState<DummyRackCategory[]>([]);
@@ -116,12 +111,15 @@ export default function InventoryPage() {
             );
         }
 
-        if (filters.strength) filtered = filtered.filter(m => m.strength?.toLowerCase().includes(filters.strength.toLowerCase()));
-        if (filters.manufacturer) filtered = filtered.filter(m => m.manufacture.toLowerCase().includes(filters.manufacturer.toLowerCase()));
-        if (filters.genericName) filtered = filtered.filter(m => m.genericName.toLowerCase().includes(filters.genericName.toLowerCase()));
+        // Sorting for Top/Low Selling
+        if (statusFilter === 'top-selling') {
+            filtered.sort((a, b) => b.totalSold - a.totalSold);
+        } else if (statusFilter === 'low-selling') {
+            filtered.sort((a, b) => a.totalSold - b.totalSold);
+        }
 
         return filtered;
-    }, [medicines, statusFilter, searchQuery, filters]);
+    }, [medicines, statusFilter, searchQuery]);
 
     // === Pagination (List View) ===
     const paginatedMedicines = useMemo(() => {
@@ -129,7 +127,7 @@ export default function InventoryPage() {
         return filteredMedicines.slice(startIndex, startIndex + itemsPerPage);
     }, [filteredMedicines, currentPage]);
     const totalPages = Math.ceil(filteredMedicines.length / itemsPerPage);
-    useEffect(() => setCurrentPage(1), [statusFilter, searchQuery, filters, viewMode]);
+    useEffect(() => setCurrentPage(1), [statusFilter, searchQuery, viewMode]);
 
 
     // === Filtering Logic (Rack View) ===
@@ -157,12 +155,7 @@ export default function InventoryPage() {
 
 
     // === Handlers ===
-    const handleFilterChange = (key: keyof typeof filters, value: string) => {
-        setFilters(prev => ({ ...prev, [key]: value }));
-    };
-
     const clearFilters = () => {
-        setFilters({ strength: '', manufacturer: '', genericName: '' });
         setSearchQuery('');
         setStatusFilter('all');
     };
@@ -223,7 +216,7 @@ export default function InventoryPage() {
     };
 
 
-    const hasActiveFilters = searchQuery || Object.values(filters).some(Boolean) || statusFilter !== 'all';
+    const hasActiveFilters = searchQuery || statusFilter !== 'all';
 
 
     return (
@@ -307,41 +300,55 @@ export default function InventoryPage() {
 
                         {/* Search (Universal) */}
                         <div className="space-y-1.5 flex-1 min-w-[250px]">
-                            <label className="text-xs font-semibold text-slate-500 uppercase">Search</label>
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                                <Input
-                                    placeholder={viewMode === 'list' ? "Search by name, barcode..." : "Search racks..."}
-                                    className="pl-10 h-10"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
+                            <label className="text-xs font-semibold text-slate-500 uppercase">Search by Name/Strength</label>
+                            {viewMode === 'list' ? (
+                                <SearchWithSuggestions
+                                    medicines={medicines}
+                                    onSelect={(selectedMed: Medicine) => {
+                                        setSearchQuery(selectedMed.name);
+                                        // Optional: You could directly filter to just this ID or Name+Strength here
+                                        // For now, setting search query to name + strength might be enough if the main filter handles it
+                                        // But the main filter uses `includes`, so "Calbo-D (500mg)" might not match exactly if checking raw fields.
+                                        // A better approach is to let the table filter by the selected ID or precise Name/Strength.
+                                        // Let's stick to name for now, or we can improve the main filter.
+
+                                        // Actually, let's just set the query to the Name. 
+                                        // To be precise with strength, we might need a dedicated filter state.
+                                        // But the prompt asks to "show ... periodically", effectively a dropdown picker.
+                                        // Clicking it essentially "picks" it.
+                                    }}
+                                    onClear={clearFilters}
                                 />
-                            </div>
+                            ) : (
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                    <Input
+                                        placeholder="Search racks..."
+                                        className="pl-10 h-10"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                    />
+                                </div>
+                            )}
                         </div>
 
-                        {/* Filters (List View Only for now) */}
+
+                        {/* Filters (List View Only) */}
                         {viewMode === 'list' && (
-                            <>
-                                <div className="space-y-1.5 flex-initial min-w-[180px]">
-                                    <label className="text-xs font-semibold text-slate-500 uppercase">Stock Status</label>
-                                    <select
-                                        className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-600"
-                                        value={statusFilter}
-                                        onChange={(e) => setStatusFilter(e.target.value as any)}
-                                    >
-                                        <option value="all">All Products</option>
-                                        <option value="low">Low Stock only</option>
-                                        <option value="out">Out of Stock only</option>
-                                    </select>
-                                </div>
-                                <Button
-                                    variant={showFilters ? 'default' : 'outline'}
-                                    className={`h-10 shrink-0 gap-2 ${showFilters ? 'bg-slate-800 text-white' : 'border-slate-200 text-slate-600'}`}
-                                    onClick={() => setShowFilters(!showFilters)}
+                            <div className="space-y-1.5 flex-initial min-w-[200px]">
+                                <label className="text-xs font-semibold text-slate-500 uppercase">Sort / Filter</label>
+                                <select
+                                    className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-600"
+                                    value={statusFilter}
+                                    onChange={(e) => setStatusFilter(e.target.value as any)}
                                 >
-                                    <SlidersHorizontal size={16} /> Filters
-                                </Button>
-                            </>
+                                    <option value="all">All Products</option>
+                                    <option value="top-selling">Top Selling</option>
+                                    <option value="low-selling">Low Selling</option>
+                                    <option value="low">Low Stock only</option>
+                                    <option value="out">Out of Stock only</option>
+                                </select>
+                            </div>
                         )}
 
                         {hasActiveFilters && (
@@ -354,39 +361,6 @@ export default function InventoryPage() {
                             </Button>
                         )}
                     </div>
-
-                    {/* Advanced Filters Panel (List Only) */}
-                    {showFilters && viewMode === 'list' && (
-                        <div className="max-w-[1600px] mx-auto mt-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm grid grid-cols-1 md:grid-cols-3 gap-4 animate-in slide-in-from-top-2">
-                            <div>
-                                <label className="text-xs font-semibold text-slate-500 mb-1.5 block">Manufacturer</label>
-                                <Input
-                                    placeholder="e.g. Pfizer"
-                                    value={filters.manufacturer}
-                                    onChange={(e) => handleFilterChange('manufacturer', e.target.value)}
-                                    className="bg-slate-50 border-slate-200"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-xs font-semibold text-slate-500 mb-1.5 block">Generic Name</label>
-                                <Input
-                                    placeholder="e.g. Paracetamol"
-                                    value={filters.genericName}
-                                    onChange={(e) => handleFilterChange('genericName', e.target.value)}
-                                    className="bg-slate-50 border-slate-200"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-xs font-semibold text-slate-500 mb-1.5 block">Strength</label>
-                                <Input
-                                    placeholder="e.g. 500mg"
-                                    value={filters.strength}
-                                    onChange={(e) => handleFilterChange('strength', e.target.value)}
-                                    className="bg-slate-50 border-slate-200"
-                                />
-                            </div>
-                        </div>
-                    )}
                 </div>
 
                 {/* === Main Content === */}

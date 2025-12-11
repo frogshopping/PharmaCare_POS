@@ -45,6 +45,14 @@ export const medicineService = {
      */
     async create(medicine: Partial<Medicine>): Promise<Medicine> {
         if (USE_MOCK_DATA) {
+            // Calculate profit margin
+            const buyingPrice = medicine.buyingPrice || 0;
+            const sellingPrice = medicine.price || 0;
+            let profitMargin = 0;
+            if (buyingPrice > 0) {
+                profitMargin = ((sellingPrice - buyingPrice) / buyingPrice) * 100;
+            }
+
             const newMedicine: Medicine = {
                 id: `med-${Date.now()}`,
                 srlNo: mockMedicines.length + 1,
@@ -57,9 +65,8 @@ export const medicineService = {
                 genericName: medicine.genericName || '',
                 price: medicine.price || 0,
                 mrp: medicine.mrp,
-                discount: medicine.discount,
+                profitMargin,
                 buyingPrice: medicine.buyingPrice,
-                vat: medicine.vat || 0,
                 rackNo: medicine.rackNo || '',
                 rackLocation: medicine.rackLocation || medicine.rackNo || '',
                 totalPurchase: medicine.totalPurchase || 0,

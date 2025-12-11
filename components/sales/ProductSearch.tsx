@@ -1,14 +1,17 @@
 import React from 'react';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
+import { SearchWithSuggestions } from '@/components/inventory/SearchWithSuggestions'; // Import
 import { Search, Package, List, Plus } from 'lucide-react';
+import { Medicine } from '@/services/api';
 
 interface ProductSearchProps {
     onSearch: (term: string) => void;
     onSelectHelper: (type: string) => void;
+    medicines: Medicine[]; // Add prop
+    onSelect: (medicine: Medicine) => void; // Add prop
 }
 
-export function ProductSearch({ onSearch, onSelectHelper }: ProductSearchProps) {
+export function ProductSearch({ onSearch, onSelectHelper, medicines, onSelect }: ProductSearchProps) {
     return (
         <div className="bg-white border-b border-slate-200 p-4 space-y-4">
             {/* Action Buttons */}
@@ -44,12 +47,15 @@ export function ProductSearch({ onSearch, onSelectHelper }: ProductSearchProps) 
             </div>
 
             {/* Main Search Input */}
-            <div className="relative">
-                <Input
-                    placeholder="Scan barcode or type medicine name to add to cart..."
-                    className="h-12 text-base pl-11 shadow-sm border-blue-200 focus:border-blue-500 focus:ring-blue-500/20"
-                    icon={<div className="bg-blue-600 rounded-md p-1 -ml-1 mt-0.5"><Search size={14} className="text-white" /></div>}
-                    onChange={(e) => onSearch(e.target.value)}
+            <div className="relative z-50"> {/* Added z-index for dropdown */}
+                <SearchWithSuggestions
+                    medicines={medicines}
+                    onSelect={(med) => {
+                        onSelect(med);
+                    }}
+                    onClear={() => onSearch('')}
+                    placeholder="Scan barcode or type to add (with variants)..."
+                    clearOnSelect={true}
                 />
             </div>
         </div>

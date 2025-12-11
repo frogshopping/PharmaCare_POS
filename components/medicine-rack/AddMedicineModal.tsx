@@ -35,7 +35,20 @@ export default function AddMedicineModal({ isOpen, onClose, onSave }: AddMedicin
     });
 
     const handleChange = (field: keyof Medicine, value: any) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
+        setFormData(prev => {
+            const updated = { ...prev, [field]: value };
+            // Auto-calculate profit margin when prices change
+            if (field === 'price' || field === 'buyingPrice') {
+                const buyingPrice = field === 'buyingPrice' ? value : (prev.buyingPrice || 0);
+                const sellingPrice = field === 'price' ? value : (prev.price || 0);
+                if (buyingPrice > 0) {
+                    updated.profitMargin = ((sellingPrice - buyingPrice) / buyingPrice) * 100;
+                } else {
+                    updated.profitMargin = 0;
+                }
+            }
+            return updated;
+        });
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -198,6 +211,17 @@ export default function AddMedicineModal({ isOpen, onClose, onSave }: AddMedicin
                                     value={formData.mrp}
                                     onChange={(e) => handleChange('mrp', parseFloat(e.target.value))}
                                     placeholder="0.00"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-slate-700 mb-1">Profit Margin</label>
+                                <Input
+                                    type="text"
+                                    value={formData.profitMargin ? `${formData.profitMargin.toFixed(2)}%` : '0.00%'}
+                                    readOnly
+                                    className="bg-slate-50 text-slate-600 font-semibold"
+                                    placeholder="Auto-calculated"
                                 />
                             </div>
                         </div>

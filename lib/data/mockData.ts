@@ -200,6 +200,7 @@ export const mockRacks: Rack[] = [
     { id: 2, name: 'Rack A2' },
     { id: 3, name: 'Fridge 1' },
     { id: 4, name: 'Shelf B-Top' },
+    { id: 5, name: 'Pain Rack 1' },
 ];
 
 export const mockGenerics: GenericName[] = [
@@ -357,23 +358,61 @@ function generateMedicines(): Medicine[] {
 
     // Generate additional medicines
     const categories = ['Allergy', 'Antibiotic', 'Pain Relief', 'Antacid', 'Diabetes Care', 'Vitamins', 'Skin Care', 'Cardiac'];
-    const manufacturers = ['Global Pharma', 'PharmaSource', 'HealthPlus Ltd', 'MedSupply Co', 'LifeCare Distributors', 'Incepta', 'Square', 'Beximco'];
+    const manufacturers = [
+        'Square Pharmaceuticals PLC', 'Beximco Pharmaceuticals Ltd', 'Incepta Pharmaceuticals Ltd',
+        'Renata Limited', 'ACI Limited', 'Eskayef Pharmaceuticals Ltd (SK+F)',
+        'Aristopharma Ltd', 'Drug International Ltd', 'Healthcare Pharmaceuticals Ltd', 'Opsonin Pharma Ltd'
+    ];
+    // Real popular Bangladeshi medicines
+    const popularMedicines = [
+        { name: 'Napa', generic: 'Paracetamol', strength: '500mg', type: 'Tablet', mfr: 'Beximco Pharmaceuticals Ltd' },
+        { name: 'Napa Extra', generic: 'Paracetamol + Caffeine', strength: '500mg+65mg', type: 'Tablet', mfr: 'Beximco Pharmaceuticals Ltd' },
+        { name: 'Seclo', generic: 'Omeprazole', strength: '20mg', type: 'Capsule', mfr: 'Square Pharmaceuticals PLC' },
+        { name: 'Maxpro', generic: 'Esomeprazole', strength: '20mg', type: 'Tablet', mfr: 'Renata Limited' },
+        { name: 'Sergel', generic: 'Esomeprazole', strength: '20mg', type: 'Capsule', mfr: 'Healthcare Pharmaceuticals Ltd' },
+        { name: 'Pantonix', generic: 'Pantoprazole', strength: '20mg', type: 'Tablet', mfr: 'Incepta Pharmaceuticals Ltd' },
+        { name: 'Bizoran', generic: 'Amlodipine + Olmesartan', strength: '5/20mg', type: 'Tablet', mfr: 'Aristopharma Ltd' },
+        { name: 'Monas', generic: 'Montelukast', strength: '10mg', type: 'Tablet', mfr: 'The ACME Laboratories Ltd' },
+        { name: 'Fexo', generic: 'Fexofenadine', strength: '120mg', type: 'Tablet', mfr: 'Square Pharmaceuticals PLC' },
+        { name: 'Losectil', generic: 'Omeprazole', strength: '20mg', type: 'Capsule', mfr: 'Eskayef Pharmaceuticals Ltd (SK+F)' },
+        { name: 'Tofen', generic: 'Ketotifen', strength: '1mg', type: 'Tablet', mfr: 'Beximco Pharmaceuticals Ltd' },
+        { name: 'Alatrol', generic: 'Cetirizine', strength: '10mg', type: 'Tablet', mfr: 'Square Pharmaceuticals PLC' },
+        { name: 'Zimax', generic: 'Azithromycin', strength: '500mg', type: 'Capsule', mfr: 'Square Pharmaceuticals PLC' },
+        { name: 'Cef-3', generic: 'Cefixime', strength: '200mg', type: 'Capsule', mfr: 'Square Pharmaceuticals PLC' },
+        { name: 'E-Cap', generic: 'Vitamin E', strength: '400IU', type: 'Soft Gelatin Capsule', mfr: 'Drug International Ltd' },
+        { name: 'Calbo-D', generic: 'Calcium + Vitamin D3', strength: '500mg+200IU', type: 'Tablet', mfr: 'Square Pharmaceuticals PLC' },
+        { name: 'Filwel Gold', generic: 'Multivitamin & Multimineral', strength: '', type: 'Tablet', mfr: 'Square Pharmaceuticals PLC' },
+        { name: 'Neuro-B', generic: 'Vitamin B1, B6, B12', strength: '', type: 'Tablet', mfr: 'Square Pharmaceuticals PLC' },
+        { name: 'Ceevit', generic: 'Vitamin C', strength: '250mg', type: 'Chewable Tablet', mfr: 'Square Pharmaceuticals PLC' },
+        { name: 'Entacyd', generic: 'Antacid', strength: '', type: 'Suspension', mfr: 'Square Pharmaceuticals PLC' }
+    ];
+
     const generics = ['Cetirizine', 'Amoxicillin', 'Ibuprofen', 'Omeprazole', 'Metformin', 'Multivitamin', 'Hydrocortisone', 'Azithromycin', 'Esomeprazole'];
     const types: Medicine['type'][] = ['Tablet', 'Capsule', 'Syrup', 'Injection', 'Cream', 'Suspension'];
-    const suppliers = ['Renata Limited', 'Square Pharma', 'Beximco', 'ACI Limited', 'Aristopharma'];
+    const suppliers = ['Renata Depot', 'Square Depot', 'Beximco Depot', 'ACI Depot', 'Aristopharma Depot'];
     const rackPrefixes = ['A', 'B', 'C', 'D', 'E', 'Fridge'];
 
     const generatedMedicines = Array.from({ length: 60 }, (_, i) => {
-        const type = types[Math.floor(Math.random() * types.length)]!;
+        // Use real medicine data for the first 20 items
+        let medData;
+        if (i < popularMedicines.length) {
+            medData = popularMedicines[i];
+        }
+
+        const type = medData ? (medData.type as Medicine['type']) : types[Math.floor(Math.random() * types.length)]!;
         const rackPrefix = rackPrefixes[Math.floor(Math.random() * rackPrefixes.length)];
         const rackNum = Math.floor(Math.random() * 5) + 1;
-        const location = type === 'Injection' || type === 'Syrup' ? `Fridge-${Math.floor(Math.random() * 3) + 1}` : `Rack ${rackPrefix}-${rackNum}`;
+        const location = type === 'Injection' || type === 'Syrup' || type === 'Suspension' ? `Fridge-${Math.floor(Math.random() * 3) + 1}` : `Rack ${rackPrefix}-${rackNum}`;
+
         const price = Math.round((Math.random() * 50 + 5) * 100) / 100;
         const buyingPrice = Math.round(price * 0.8 * 100) / 100;
-        const inStock = Math.floor(Math.random() * 200);
+        // Random stock but higher for top selling (first few)
+        const inStock = i < 10 ? Math.floor(Math.random() * 500 + 500) : Math.floor(Math.random() * 200);
         const stockStatus = inStock === 0 ? 'Low Stock' : inStock < 20 ? 'Stock Alert' : 'Normal';
+
         const stripSize = type === 'Tablet' || type === 'Capsule' ? 10 : 1;
         const boxSize = type === 'Tablet' || type === 'Capsule' ? 10 : 20;
+
         const stripPrice = Math.round(price * stripSize * 100) / 100;
         const boxPrice = Math.round(stripPrice * boxSize * 100) / 100;
 
@@ -382,21 +421,24 @@ function generateMedicines(): Medicine[] {
         const pDate = new Date();
         pDate.setDate(pDate.getDate() - Math.random() * 200);
 
+        // High sales for top items
+        const totalSold = i < 10 ? Math.floor(Math.random() * 1000 + 500) : Math.floor(Math.random() * 100);
+
         return {
             id: `med-${i + 4}`,
             srlNo: i + 4,
-            name: `Medicine ${generics[i % generics.length]} ${i + 4}`,
+            name: medData ? medData.name : `Medicine ${generics[i % generics.length]} ${i + 4}`,
             barcode: `SKU${i + 1100}`,
             productCode: String(i + 1100).padStart(5, '0'),
-            strength: `${(i % 5) * 50 + 10}mg`,
-            manufacture: manufacturers[i % manufacturers.length]!,
-            genericName: generics[i % generics.length]!,
+            strength: medData ? medData.strength : `${(i % 5) * 50 + 10}mg`,
+            manufacture: medData ? medData.mfr : manufacturers[i % manufacturers.length]!,
+            genericName: medData ? medData.generic : generics[i % generics.length]!,
             price,
             buyingPrice,
             vat: 0.0,
             rackNo: location,
-            totalPurchase: 0,
-            totalSold: 0,
+            totalPurchase: totalSold + inStock,
+            totalSold: totalSold,
             inStock,
             stockStatus: stockStatus as Medicine['stockStatus'],
             category: categories[i % categories.length],
@@ -412,7 +454,161 @@ function generateMedicines(): Medicine[] {
         };
     });
 
-    return [...baseMedicines, ...generatedMedicines];
+    const painMedicinesRaw = [
+        { n: "A-Calm", t: "Tablet", s: "50 mg", m: "The ACME Laboratories Ltd" },
+        { n: "Alkanon", t: "Tablet", s: "500 mg", m: "Renata Limited" },
+        { n: "Anaflex", t: "Tablet", s: "500 mg", m: "ACI Limited" },
+        { n: "A-Fenac", t: "Tablet", s: "50 mg", m: "The ACME Laboratories Ltd" },
+        { n: "Azelto", t: "Capsule", s: "100 mg", m: "Ziska Pharmaceuticals Ltd." },
+        { n: "Beklo", t: "Tablet", s: "10 mg", m: "Opsonin Pharma Ltd." },
+        { n: "Cilosta", t: "Tablet", s: "100 mg", m: "Square Pharmaceuticals Ltd." },
+        { n: "Clofenac SR", t: "Tablet", s: "100 mg", m: "Square Pharmaceuticals Ltd." },
+        { n: "Cox-E", t: "Tablet", s: "120 mg", m: "Popular Pharmaceuticals Ltd." },
+        { n: "Dinovo", t: "Tablet", s: "500 mg+20 mg", m: "Beximco Pharmaceuticals Ltd." },
+        { n: "Dotfix", t: "Tablet", s: "1 mg", m: "Square Pharmaceuticals Ltd." },
+        { n: "Duloxen", t: "Tablet", s: "20 mg", m: "Incepta Pharmaceuticals Limited" },
+        { n: "Etorac", t: "Tablet", s: "10 mg", m: "Incepta Pharmaceuticals Limited" },
+        { n: "Etorix", t: "Tablet", s: "90 mg", m: "Eskayef Bangladesh Ltd." },
+        { n: "Febustat", t: "Tablet", s: "40 mg", m: "Incepta Pharmaceuticals Limited" },
+        { n: "Feluric", t: "Tablet", s: "40 mg", m: "Healthcare Pharmacuticals Ltd." },
+        { n: "Flamex", t: "Tablet", s: "400 mg", m: "ACI Limited" },
+        { n: "Flexi", t: "Tablet", s: "100 mg", m: "Square Pharmaceuticals Ltd." },
+        { n: "Flexibac", t: "Tablet", s: "10 mg", m: "Beacon Pharmaceuticals Ltd." },
+        { n: "Gaba", t: "Tablet", s: "300 mg", m: "Renata Limited" },
+        { n: "Gaba-PCR", t: "Tablet", s: "82.5 mg", m: "Renata Limited" },
+        { n: "Gabarol", t: "Capsule", s: "75 mg", m: "ACI Limited" },
+        { n: "HPR", t: "Tablet", s: "250 mg", m: "Pacific Pharmaceuticals Ltd." },
+        { n: "Indomet SR", t: "Capsule", s: "75 mg", m: "Opsonin Pharma Ltd." },
+        { n: "Lindac", t: "Tablet", s: "100 mg", m: "Popular Pharmaceuticals Ltd." },
+        { n: "Lorno", t: "Tablet", s: "4 mg", m: "Square Pharmaceuticals Ltd." },
+        { n: "Lyric", t: "Capsule", s: "50 mg", m: "Healthcare Pharmacuticals Ltd." },
+        { n: "Mervan", t: "Tablet", s: "100 mg", m: "Aristopharma Ltd." },
+        { n: "Methotrax", t: "Tablet", s: "10 mg", m: "Delta Pharma Limited" },
+        { n: "Migalin", t: "Tablet", s: "2.5 mg", m: "Popular Pharmaceuticals Ltd." },
+        { n: "Myolax", t: "Tablet", s: "50 mg", m: "Incepta Pharmaceuticals Limited" },
+        { n: "Nabumet", t: "Tablet", s: "500 mg", m: "Eskayef Pharmaceuticals Ltd." },
+        { n: "Napro-A", t: "Tablet", s: "250 mg", m: "The ACME Laboratories Ltd" },
+        { n: "Naprosyn", t: "Tablet", s: "500 mg", m: "Radiant Pharmaceuticals Ltd." },
+        { n: "Naprosyn Plus", t: "Tablet", s: "375 mg+20 mg", m: "Radiant Pharmaceuticals Ltd." },
+        { n: "Napryn", t: "Tablet", s: "500 mg", m: "Healthcare Pharmacuticals Ltd." },
+        { n: "Naspro Plus", t: "Tablet", s: "500 mg+20 mg", m: "Popular Pharmaceuticals Ltd." },
+        { n: "Nervalin CR", t: "Tablet", s: "82.5 mg", m: "Beximco Pharmaceuticals Ltd." },
+        { n: "Neso", t: "Tablet", s: "500 mg+20 mg", m: "Aristopharma Ltd." },
+        { n: "Neural", t: "Tablet", s: "0.5 mg", m: "Healthcare Pharmacuticals Ltd." },
+        { n: "Nimovo", t: "Tablet", s: "500 mg+20 mg", m: "NIPRO JMI Pharma Ltd." },
+        { n: "Anadol", t: "Capsule", s: "50 mg", m: "Square Pharmaceuticals Ltd." },
+        { n: "Anodyne SR", t: "Capsule", s: "100 mg", m: "Ibn Sina Pharmaceuticals Ltd." },
+        { n: "Baritor", t: "Tablet", s: "2 mg", m: "Square Pharmaceuticals Ltd." },
+        { n: "Camlor", t: "Tablet", s: "4 mg", m: "Popular Pharmaceuticals Ltd." },
+        { n: "Clofenac", t: "Tablet", s: "50 mg", m: "Square Pharmaceuticals Ltd." },
+        { n: "Colimax", t: "Tablet", s: "0.6 mg", m: "Square Pharmaceuticals Ltd." },
+        { n: "Curnoid", t: "Tablet", s: "500 mg", m: "Radiant Pharmaceuticals Ltd." },
+        { n: "Dinovo", t: "Tablet", s: "375 mg+20 mg", m: "Beximco Pharmaceuticals Ltd." },
+        { n: "Dotiric", t: "Tablet", s: "0.5 mg", m: "Everest Pharmaceuticals Ltd." },
+        { n: "Edopain ER", t: "Tablet", s: "600 mg", m: "Incepta Pharmaceuticals Limited" },
+        { n: "Etorica", t: "Tablet", s: "120 mg", m: "Labaid Pharma Ltd." },
+        { n: "Etorix", t: "Tablet", s: "120 mg", m: "Eskayef Bangladesh Ltd." },
+        { n: "Febustat", t: "Tablet", s: "80 mg", m: "Incepta Pharmaceuticals Limited" },
+        { n: "Fenaton", t: "Tablet", s: "500 mg", m: "Drug International Limited" },
+        { n: "Flamfix", t: "Tablet", s: "500 mg", m: "Square Pharmaceuticals Ltd." },
+        { n: "Flexi SR", t: "Tablet", s: "200 mg", m: "Square Pharmaceuticals Ltd." },
+        { n: "Flexilax", t: "Tablet", s: "10 mg", m: "Square Pharmaceuticals Ltd." },
+        { n: "GABA-P", t: "Capsule", s: "50 mg", m: "Renata Limited" },
+        { n: "Gaba-PCR", t: "Tablet", s: "165 mg", m: "Renata Limited" },
+        { n: "Gabarol", t: "Capsule", s: "25 mg", m: "ACI Limited" },
+        { n: "HPR-DS", t: "Tablet", s: "500 mg", m: "Pacific Pharmaceuticals Ltd." },
+        { n: "Jakloc XR", t: "Tablet", s: "11 mg", m: "Popular Pharmaceuticals Ltd." },
+        { n: "Lindac", t: "Tablet", s: "200 mg", m: "Popular Pharmaceuticals Ltd." },
+        { n: "Loxodol", t: "Tablet", s: "8 mg", m: "Navana Pharmaceuticals Ltd." },
+        { n: "Lyrinex CR", t: "Tablet", s: "82.5 mg", m: "NIPRO JMI Pharma Ltd." },
+        { n: "Mervan SR", t: "Tablet", s: "200 mg", m: "Aristopharma Ltd." },
+        { n: "Mig", t: "Tablet", s: "5 mg", m: "Eskayef Bangladesh Ltd." },
+        { n: "Mirotiv", t: "Tablet", s: "5 mg", m: "Renata Limited" },
+        { n: "Myrica", t: "Capsule", s: "50 mg", m: "UniMed UniHealth Pharmaceuticals Ltd." },
+        { n: "Nabumet", t: "Tablet", s: "750 mg", m: "Eskayef Bangladesh Ltd." },
+        { n: "Napro-A Plus", t: "Tablet", s: "375 mg+20 mg", m: "The ACME Laboratories Ltd" },
+        { n: "Naprosyn", t: "Tablet", s: "250 mg", m: "Radiant Pharmaceuticals Ltd." },
+        { n: "Naprox", t: "Tablet", s: "500 mg", m: "Eskayef Pharmaceuticals Ltd." },
+        { n: "Napryn SR", t: "Tablet", s: "500 mg", m: "Healthcare Pharmacuticals Ltd." },
+        { n: "Naspro Plus", t: "Tablet", s: "375 mg+20 mg", m: "Popular Pharmaceuticals Ltd." },
+        { n: "Nervex", t: "Tablet", s: "0.5 mg", m: "Orion Pharma Ltd." },
+        { n: "Neugaba", t: "Capsule", s: "25 mg", m: "Sun Pharmaceutical (Bangladesh) Limited" },
+        { n: "Neurolin", t: "Capsule", s: "50 mg", m: "Square Pharmaceuticals Ltd." },
+        { n: "Nodia", t: "Tablet", s: "10 mg", m: "Incepta Pharmaceuticals Limited" },
+        { n: "Aldorin", t: "Tablet", s: "50 mg", m: "Eskayef Pharmaceuticals Ltd." },
+        { n: "Anadol Plus", t: "Tablet", s: "325 mg+37.5 mg", m: "Square Pharmaceuticals Ltd." },
+        { n: "Apitac", t: "Tablet", s: "100 mg", m: "The ACME Laboratories Ltd" }
+    ];
+
+    const painMedicines = painMedicinesRaw.map((m, i) => {
+        const idOffset = 200 + i;
+        const price = Math.round((Math.random() * 50 + 5) * 100) / 100;
+        const buyingPrice = Math.round(price * 0.8 * 100) / 100;
+        const inStock = Math.floor(Math.random() * 200) + 50;
+        const stockStatus = inStock < 20 ? 'Stock Alert' : 'Normal';
+
+        return {
+            id: `pain-med-${idOffset}`,
+            srlNo: idOffset,
+            name: m.n,
+            barcode: `SKU-P${idOffset}`,
+            productCode: `P${idOffset}`,
+            strength: m.s,
+            manufacture: m.m,
+            genericName: 'Pain Relief (Generic)',
+            price,
+            buyingPrice,
+            vat: 0.0,
+            rackNo: 'Pain Rack 1',
+            rackLocation: 'Pain Rack 1',
+            totalPurchase: 0,
+            totalSold: 0,
+            inStock,
+            stockStatus: stockStatus as Medicine['stockStatus'],
+            type: m.t as Medicine['type'],
+            category: 'Pain Relief',
+            expiryDate: new Date(Date.now() + 31536000000).toISOString().split('T')[0], // 1 year from now
+            batchId: `B-${Math.floor(Math.random() * 90000)}`,
+            supplier: 'Local Pharma',
+            purchaseDate: new Date().toISOString().split('T')[0],
+            supplierContact: '',
+            packSize: { strip: 10, box: 10 },
+            packPrice: { strip: parseFloat((price * 10).toFixed(2)), box: parseFloat((price * 100).toFixed(2)) }
+        };
+    });
+
+    const calboVariants = [
+        { n: "Calbo-D", t: "Tablet", s: "500 mg", m: "Square Pharmaceuticals PLC", p: 5.00 }, // Standard
+        { n: "Calbo-D", t: "Tablet", s: "100 mg", m: "Square Pharmaceuticals PLC", p: 2.50 }, // Low strength
+        { n: "Calbo-D Jr", t: "Tablet", s: "50 mg", m: "Square Pharmaceuticals PLC", p: 1.50 }, // Kids
+        { n: "Calbo-D Forte", t: "Tablet", s: "1000 mg", m: "Square Pharmaceuticals PLC", p: 9.00 }, // High strength
+    ];
+
+    const calboMedicines = calboVariants.map((m, i) => ({
+        id: `calbo-${i}`,
+        srlNo: 300 + i,
+        name: m.n,
+        barcode: `CALBO-${i}`,
+        productCode: `C-${i}`,
+        strength: m.s,
+        manufacture: m.m,
+        genericName: 'Calcium + Vitamin D3',
+        price: m.p,
+        buyingPrice: m.p * 0.8,
+        vat: 0,
+        rackNo: 'Rack A-1',
+        totalPurchase: 50,
+        totalSold: 10,
+        inStock: 100,
+        stockStatus: 'Normal' as const,
+        type: m.t as Medicine['type'],
+        expiryDate: new Date().toISOString().split('T')[0],
+        supplier: 'Square Pharma',
+        packSize: { strip: 10, box: 10 },
+        packPrice: { strip: m.p * 10, box: m.p * 100 }
+    }));
+
+    return [...baseMedicines, ...painMedicines, ...calboMedicines, ...generatedMedicines];
 }
 
 export const mockMedicines: Medicine[] = generateMedicines();

@@ -41,16 +41,12 @@ export interface Medicine {
     genericName: string;
     price: number;
     mrp?: number; // Maximum Retail Price
-    discount?: number; // Discount percentage
-    vat: number;
+    profitMargin?: number; // Profit margin percentage
     rackNo: string;
     totalPurchase: number;
     totalSold: number;
     inStock: number;
     stockStatus: 'Low Stock' | 'Stock Alert' | 'Normal';
-    category?: string;
-    subCategory?: string;
-    childCategory?: string;
     expiryDate?: string;
     type?: 'Tablet' | 'Syrup' | 'Capsule' | 'Injection' | 'Suspension' | 'Cream' | 'Other';
     rackLocation?: string;
@@ -67,9 +63,11 @@ export interface Medicine {
         box: number;
     };
     supplierContact?: string;
-    status?: 'Active' | 'Inactive';
     eCommerceProduct?: boolean;
     stockAlert?: number;
+    discount?: number;
+    category?: string;
+    vat?: number;
 }
 
 export interface CategoryGroup {
@@ -261,7 +259,6 @@ export interface InvoiceItem {
     unitPrice: number;
     tradePrice: number;
     discountPercent: number;
-    vat: number;
     total: number;
 }
 
@@ -282,8 +279,6 @@ export interface Invoice {
     supplierEmail?: string;
     items: InvoiceItem[];
     subtotal: number;
-    vat: number;
-    discount: number;
     totalAmount: number;
     paidAmount: number;
     dueAmount: number;

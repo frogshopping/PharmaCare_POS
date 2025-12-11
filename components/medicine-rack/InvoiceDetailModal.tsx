@@ -101,14 +101,6 @@ const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({ invoice, onClos
                                         <td colSpan={3} className="px-6 py-2 text-right text-slate-600 font-medium border-t border-slate-200">Total Trade Amount</td>
                                         <td className="px-6 py-2 text-right text-slate-800 font-bold border-t border-slate-200">{invoice.subtotal.toFixed(2)}</td>
                                     </tr>
-                                    <tr>
-                                        <td colSpan={3} className="px-6 py-2 text-right text-slate-600 font-medium">Vat</td>
-                                        <td className="px-6 py-2 text-right text-slate-800">{invoice.vat.toFixed(2)}</td>
-                                    </tr>
-                                    <tr>
-                                        <td colSpan={3} className="px-6 py-2 text-right text-slate-600 font-medium">Discount</td>
-                                        <td className="px-6 py-2 text-right text-slate-800">{invoice.discount.toFixed(2)}</td>
-                                    </tr>
                                     <tr className="bg-blue-50/50">
                                         <td colSpan={3} className="px-6 py-3 text-right text-slate-800 font-bold border-t border-blue-100">Grand Total</td>
                                         <td className="px-6 py-3 text-right text-blue-700 font-bold text-lg border-t border-blue-100">{invoice.totalAmount.toFixed(2)}</td>

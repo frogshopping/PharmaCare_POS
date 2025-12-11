@@ -8,8 +8,8 @@ export interface PaymentInfo {
     discountPercent: number;
     discountAmount: number;
     shippingFee: number;
-    vatPercent: number;
-    totalVat: number;
+    vatPercent: number; // Added
+    totalVat: number;   // Added
     grandTotal: number;
     totalPaid: number;
     paymentMethod: string;
@@ -35,21 +35,8 @@ export function PaymentSection({ info, onChange, onSave }: PaymentSectionProps) 
 
             {/* Calculation Row 1 */}
             <div className="grid grid-cols-12 gap-6 mb-2">
-                {/* VAT Input (Left side) */}
-                <div className="col-span-3">
-                    <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-md px-3 h-10">
-                        <span className="text-xs font-semibold text-slate-500 uppercase whitespace-nowrap">Vat(%)</span>
-                        <Input
-                            type="number"
-                            value={info.vatPercent}
-                            onChange={(e) => handleChange('vatPercent', parseFloat(e.target.value) || 0)}
-                            className="bg-transparent border-none h-full focus:ring-0 p-0 text-right"
-                        />
-                    </div>
-                </div>
-
                 {/* Right Side Totals */}
-                <div className="col-span-9 space-y-3">
+                <div className="col-span-12 space-y-3">
                     <div className="flex justify-end items-center gap-4">
                         <span className="text-sm font-semibold text-slate-600">Sub Total:</span>
                         <span className="text-sm font-bold text-slate-800 w-24 text-right">{info.subTotal.toFixed(2)}</span>
@@ -76,6 +63,21 @@ export function PaymentSection({ info, onChange, onSave }: PaymentSectionProps) 
                         </div>
                         <div className="w-24 text-right flex flex-col justify-center">
                             <span className="text-xs text-slate-500">{info.discountPercent > 0 ? `${info.discountPercent}%` : '0'}</span>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end gap-4 items-center">
+                        <div className="w-1/3">
+                            <label className="text-xs text-slate-500 mb-1 block">VAT(%)</label>
+                            <Input
+                                type="number"
+                                value={info.vatPercent}
+                                onChange={(e) => handleChange('vatPercent', parseFloat(e.target.value) || 0)}
+                                className="bg-slate-100 border-slate-200"
+                            />
+                        </div>
+                        <div className="w-24 text-right flex flex-col justify-center">
+                            <span className="text-xs text-slate-500">{info.totalVat.toFixed(2)}</span>
                         </div>
                     </div>
 

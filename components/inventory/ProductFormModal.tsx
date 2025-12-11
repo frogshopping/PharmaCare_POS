@@ -5,7 +5,7 @@ import { FormModal } from "@/components/ui/FormModal"
 import { FormField } from "@/components/ui/FormField"
 import { Input } from "@/components/ui/Input"
 import { CreatableSelect } from "@/components/ui/CreatableSelect"
-import { Package, AlertCircle, Building2, ShoppingBag, DollarSign, Percent, Box } from "lucide-react"
+import { Package, AlertCircle, Building2, ShoppingBag, DollarSign, Percent, Box, Plus } from "lucide-react"
 import { useFormState } from "@/lib/hooks/useFormState"
 import { medicineService, Rack, GenericName } from "@/services"
 import { CreateModalProps, EditModalProps, Medicine, Category, Subcategory, ChildCategory } from "@/lib/types"
@@ -47,27 +47,32 @@ export function ProductFormModal(props: ProductFormModalProps) {
     const [manufacturers, setManufacturers] = React.useState<Manufacturer[]>([
         {
             id: 1,
-            name: "Square Pharmaceuticals",
+            name: "Square Pharmaceuticals PLC",
             suppliers: [
-                { id: 1, name: "Mr. Rahman", phone: "+880 1711-223344" },
-                { id: 2, name: "Ms. Sultana", phone: "+880 1811-334455" },
+                { id: 1, name: "Mr. Rahim (Square)", phone: "01711000001" },
             ]
         },
         {
             id: 2,
-            name: "Beximco Pharmaceuticals",
+            name: "Beximco Pharmaceuticals Ltd",
             suppliers: [
-                { id: 3, name: "Mr. Khan", phone: "+880 1911-445566" },
+                { id: 3, name: "Ms. Sadia (Beximco)", phone: "01811000002" },
             ]
         },
         {
             id: 3,
-            name: "Renata Limited",
+            name: "Incepta Pharmaceuticals Ltd",
             suppliers: [
-                { id: 4, name: "Ms. Akter", phone: "+880 1611-556677" },
-                { id: 5, name: "Mr. Hossain", phone: "+880 1511-667788" },
+                { id: 4, name: "Mr. Kamal (Incepta)", phone: "01911000003" },
             ]
         },
+        { id: 4, name: "Renata Limited", suppliers: [] },
+        { id: 5, name: "ACI Limited", suppliers: [] },
+        { id: 6, name: "Eskayef Pharmaceuticals Ltd (SK+F)", suppliers: [] },
+        { id: 7, name: "Aristopharma Ltd", suppliers: [] },
+        { id: 8, name: "Drug International Ltd", suppliers: [] },
+        { id: 9, name: "Healthcare Pharmaceuticals Ltd", suppliers: [] },
+        { id: 10, name: "Opsonin Pharma Ltd", suppliers: [] },
     ])
 
     const [selectedManufacturer, setSelectedManufacturer] = React.useState<Manufacturer | null>(null)
@@ -79,26 +84,12 @@ export function ProductFormModal(props: ProductFormModalProps) {
         { id: '1', number: 1, name: 'Medicine', status: 'Active' },
         { id: '2', number: 2, name: 'Equipment', status: 'Active' },
     ])
-    const [subCategories, setSubCategories] = React.useState<Subcategory[]>([])
-    const [childCategories, setChildCategories] = React.useState<ChildCategory[]>([])
 
     // Handlers for Category Creation (Mock)
     const handleCreateCategory = (name: string) => {
         const newCat: Category = { id: Date.now().toString(), number: categories.length + 1, name, status: 'Active' }
         setCategories(prev => [...prev, newCat])
         handleChange('category', name)
-    }
-
-    const handleCreateSubCategory = (name: string) => {
-        const newSub: Subcategory = { id: Date.now().toString(), number: subCategories.length + 1, name, categoryName: formData.category, status: 'Active' }
-        setSubCategories(prev => [...prev, newSub])
-        handleChange('subCategory', name)
-    }
-
-    const handleCreateChildCategory = (name: string) => {
-        const newChild: ChildCategory = { id: Date.now().toString(), number: childCategories.length + 1, name, subcategory: formData.subCategory, status: 'Active' }
-        setChildCategories(prev => [...prev, newChild])
-        handleChange('childCategory', name)
     }
 
     const { formData, handleChange, handleReset, isSubmitting, setSubmitting } = useFormState({
@@ -124,9 +115,9 @@ export function ProductFormModal(props: ProductFormModalProps) {
         buyingStripPrice: 0,
         buyingBoxPrice: 0,
 
-        // MRP & Discount - use stored MRP if available, otherwise use selling price
+        // MRP & Profit Margin
         mrpUnitPrice: product?.mrp || product?.price || 0,
-        discountPercent: product?.discount || 0,
+        profitMargin: product?.profitMargin || product?.discount || 0, // Prefer profitMargin field
 
         // Selling prices (auto-calculated)
         sellingUnitPrice: product?.price || 0,
@@ -136,12 +127,7 @@ export function ProductFormModal(props: ProductFormModalProps) {
         // New Fields
         productCode: product?.productCode || "", // Auto-generate if empty
         category: product?.category || "",
-        subCategory: product?.subCategory || "",
-        childCategory: product?.childCategory || "",
         stockAlert: product?.stockAlert || 10,
-        vat: product?.vat || 0,
-        infoStatus: product?.status || 'Active',
-        isEcommerce: product?.eCommerceProduct || false,
     })
 
     const needsPackaging = formData.productType === 'Tablet' || formData.productType === 'Capsule';
@@ -183,24 +169,37 @@ export function ProductFormModal(props: ProductFormModalProps) {
         }
     }, [formData.buyingUnitPrice, formData.stripSize, formData.boxSize, needsPackaging]);
 
-    // Auto-calculate selling prices from MRP and discount
+    // Auto-calculate properties
+    // Logic: 
+    // 1. Selling Price = MRP (assuming no discount to customer by default)
+    // 2. Profit Margin = ((MRP - Cost) / MRP) * 100
     React.useEffect(() => {
+        // Always sync Selling Price with MRP if MRP is set
         if (formData.mrpUnitPrice) {
-            const discountAmount = (formData.mrpUnitPrice * formData.discountPercent) / 100;
-            const sellingUnit = formData.mrpUnitPrice - discountAmount;
-            handleChange('sellingUnitPrice', parseFloat(sellingUnit.toFixed(2)));
+            handleChange('sellingUnitPrice', formData.mrpUnitPrice);
 
-            if (needsPackaging && formData.stripSize) {
-                const sellingStrip = sellingUnit * formData.stripSize;
-                handleChange('sellingStripPrice', parseFloat(sellingStrip.toFixed(2)));
-
-                if (formData.boxSize) {
-                    const sellingBox = sellingStrip * formData.boxSize;
-                    handleChange('sellingBoxPrice', parseFloat(sellingBox.toFixed(2)));
-                }
+            // Calculate Profit Margin
+            if (formData.buyingUnitPrice > 0 && formData.mrpUnitPrice > 0) {
+                const margin = ((formData.mrpUnitPrice - formData.buyingUnitPrice) / formData.mrpUnitPrice) * 100;
+                handleChange('profitMargin', parseFloat(margin.toFixed(2)));
+            } else {
+                handleChange('profitMargin', 0);
             }
         }
-    }, [formData.mrpUnitPrice, formData.discountPercent, formData.stripSize, formData.boxSize, needsPackaging]);
+
+        // Calculate Strip/Box prices based on the sellingUnitPrice (MRP)
+        const currentSellingPrice = formData.mrpUnitPrice || formData.sellingUnitPrice || 0;
+
+        if (needsPackaging && formData.stripSize) {
+            const sellingStrip = currentSellingPrice * formData.stripSize;
+            handleChange('sellingStripPrice', parseFloat(sellingStrip.toFixed(2)));
+
+            if (formData.boxSize) {
+                const sellingBox = sellingStrip * formData.boxSize;
+                handleChange('sellingBoxPrice', parseFloat(sellingBox.toFixed(2)));
+            }
+        }
+    }, [formData.mrpUnitPrice, formData.buyingUnitPrice, formData.stripSize, formData.boxSize, needsPackaging]);
 
     // Fetch racks and generics, and prefill manufacturer/supplier for edit mode
     React.useEffect(() => {
@@ -249,11 +248,20 @@ export function ProductFormModal(props: ProductFormModalProps) {
         handleChange('manufacturer', name);
         const manufacturer = manufacturers.find(m => m.name === name);
         setSelectedManufacturer(manufacturer || null);
-        setAvailableSuppliers(manufacturer?.suppliers || []);
+        const suppliers = manufacturer?.suppliers || [];
+        setAvailableSuppliers(suppliers);
 
-        handleChange('supplier', '');
-        handleChange('supplierPhone', '');
-        setSelectedSupplier(null);
+        // Auto-select first supplier if available
+        if (suppliers.length > 0) {
+            const firstSupplier = suppliers[0];
+            setSelectedSupplier(firstSupplier);
+            handleChange('supplier', firstSupplier.name);
+            handleChange('supplierPhone', firstSupplier.phone);
+        } else {
+            handleChange('supplier', '');
+            handleChange('supplierPhone', '');
+            setSelectedSupplier(null);
+        }
     }
 
     const handleSupplierChange = (name: string) => {
@@ -338,19 +346,15 @@ export function ProductFormModal(props: ProductFormModalProps) {
                 inStock: formData.stock,
                 price: formData.sellingUnitPrice,
                 mrp: formData.mrpUnitPrice, // Store MRP
-                discount: formData.discountPercent, // Store discount
+                discount: formData.profitMargin, // Store Profit Margin in discount field for schema compatibility if needed, or update schema later.
                 buyingPrice: formData.buyingUnitPrice,
                 type: formData.productType as any,
                 stockStatus: formData.stock === 0 ? 'Low Stock' as const : formData.stock < 20 ? 'Stock Alert' as const : 'Normal' as const,
                 // New Fields Mapping
                 productCode: formData.productCode || `P-${Date.now()}`,
                 category: formData.category,
-                subCategory: formData.subCategory,
-                childCategory: formData.childCategory,
                 stockAlert: formData.stockAlert,
-                vat: formData.vat,
-                status: formData.infoStatus as 'Active' | 'Inactive',
-                eCommerceProduct: formData.isEcommerce,
+                status: 'Active', // Default to Active as field is removed
                 ...(needsPackaging && {
                     packSize: {
                         strip: formData.stripSize,
@@ -469,26 +473,7 @@ export function ProductFormModal(props: ProductFormModalProps) {
                                 />
                             </FormField>
 
-                            <div className="grid grid-cols-2 gap-3">
-                                <FormField label="Sub Category (Optional)">
-                                    <CreatableSelect
-                                        options={subCategories}
-                                        value={formData.subCategory}
-                                        onChange={opt => handleChange('subCategory', opt.name)}
-                                        onCreate={handleCreateSubCategory}
-                                        placeholder="Select..."
-                                    />
-                                </FormField>
-                                <FormField label="Child Category (Optional)">
-                                    <CreatableSelect
-                                        options={childCategories}
-                                        value={formData.childCategory}
-                                        onChange={opt => handleChange('childCategory', opt.name)}
-                                        onCreate={handleCreateChildCategory}
-                                        placeholder="Select..."
-                                    />
-                                </FormField>
-                            </div>
+
 
                             <FormField label="Description">
                                 <textarea
@@ -530,36 +515,58 @@ export function ProductFormModal(props: ProductFormModalProps) {
                             Sourcing
                         </h4>
                         <div className="space-y-3">
-                            <FormField label="Manufacturer" required>
-                                <CreatableSelect
-                                    options={manufacturers.map(m => ({ id: m.id, name: m.name }))}
-                                    value={formData.manufacturer}
-                                    onChange={opt => handleManufacturerChange(opt.name)}
-                                    onCreate={handleCreateManufacturer}
-                                    placeholder="Select..."
-                                />
-                            </FormField>
 
-                            <div className="grid grid-cols-2 gap-3">
-                                <FormField
-                                    label="Supplier"
-                                    hint={!formData.manufacturer ? "Select mfr first" : undefined}
-                                >
+
+                            <div className="grid grid-cols-1 gap-3">
+                                <FormField label="Manufacturer" required>
                                     <CreatableSelect
-                                        options={availableSuppliers.map(s => ({ id: s.id, name: s.name }))}
-                                        value={formData.supplier}
-                                        onChange={opt => handleSupplierChange(opt.name)}
-                                        onCreate={handleCreateSupplier}
-                                        placeholder="Supplier..."
+                                        options={manufacturers.map(m => ({ id: m.id, name: m.name }))}
+                                        value={formData.manufacturer}
+                                        onChange={opt => handleManufacturerChange(opt.name)}
+                                        onCreate={handleCreateManufacturer}
+                                        placeholder="Select or Type to Add..."
                                     />
                                 </FormField>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3 items-end">
+                                <div className="relative">
+                                    <FormField
+                                        label="Supplier"
+                                        hint={!formData.manufacturer ? "Select mfr first" : undefined}
+                                    >
+                                        <div className="flex gap-2">
+                                            <div className="flex-1">
+                                                <CreatableSelect
+                                                    options={availableSuppliers.map(s => ({ id: s.id, name: s.name }))}
+                                                    value={formData.supplier}
+                                                    onChange={opt => handleSupplierChange(opt.name)}
+                                                    onCreate={handleCreateSupplier}
+                                                    placeholder="Select or Type..."
+                                                />
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setSelectedSupplier(null);
+                                                    handleChange('supplier', '');
+                                                    handleChange('supplierPhone', '');
+                                                }}
+                                                className="p-2 bg-purple-100/50 text-purple-600 rounded-lg hover:bg-purple-100 transition-colors"
+                                                title="Add New Supplier"
+                                            >
+                                                <Plus size={18} />
+                                            </button>
+                                        </div>
+                                    </FormField>
+                                </div>
 
                                 <FormField label="Phone">
                                     <Input
                                         placeholder="Phone"
                                         value={formData.supplierPhone}
                                         onChange={e => handleChange('supplierPhone', e.target.value)}
-                                        readOnly={!!selectedSupplier}
+                                    // Removed readOnly to allow editing
                                     />
                                 </FormField>
                             </div>
@@ -707,27 +714,14 @@ export function ProductFormModal(props: ProductFormModalProps) {
                                     />
                                 </FormField>
 
-                                <FormField label="Discount %">
+                                <FormField label="Profit Margin % (Calculated)">
                                     <div className="relative">
                                         <Input
                                             type="number"
                                             placeholder="0"
-                                            max="100"
-                                            value={formData.discountPercent || ''}
-                                            onChange={e => handleChange('discountPercent', parseFloat(e.target.value))}
-                                            className="pr-6"
-                                        />
-                                        <Percent size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400" />
-                                    </div>
-                                </FormField>
-                                <FormField label="VAT %">
-                                    <div className="relative">
-                                        <Input
-                                            type="number"
-                                            placeholder="0"
-                                            value={formData.vat || ''}
-                                            onChange={e => handleChange('vat', parseFloat(e.target.value))}
-                                            className="pr-6"
+                                            value={formData.profitMargin || ''}
+                                            readOnly
+                                            className="pr-6 bg-slate-50 text-slate-500"
                                         />
                                         <Percent size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400" />
                                     </div>
@@ -755,27 +749,7 @@ export function ProductFormModal(props: ProductFormModalProps) {
 
                     <div className="pt-2 border-t border-green-200 mt-4">
                         <div className="flex items-center justify-between gap-4">
-                            <FormField label="Status" className="flex-1">
-                                <select
-                                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20"
-                                    value={formData.infoStatus}
-                                    onChange={e => handleChange('infoStatus', e.target.value)}
-                                >
-                                    <option value="Active">Active</option>
-                                    <option value="Inactive">Inactive</option>
-                                </select>
-                            </FormField>
-                            <div className="flex items-center pt-6">
-                                <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                                        checked={formData.isEcommerce}
-                                        onChange={e => handleChange('isEcommerce', e.target.checked)}
-                                    />
-                                    eCommerce Product?
-                                </label>
-                            </div>
+
                         </div>
                     </div>
                 </div>
