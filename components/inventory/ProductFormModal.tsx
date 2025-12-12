@@ -691,7 +691,20 @@ export function ProductFormModal(props: ProductFormModalProps) {
                                         placeholder="0.00"
                                         step="0.01"
                                         value={formData.buyingUnitPrice || ''}
-                                        onChange={e => handleChange('buyingUnitPrice', parseFloat(e.target.value))}
+                                        onChange={e => {
+                                            const buy = parseFloat(e.target.value) || 0;
+                                            setFormData(prev => {
+                                                const sell = prev.sellingUnitPrice || 0;
+                                                const margin = buy > 0 ? ((sell - buy) / buy) * 100 : 0;
+                                                const buyStrip = buy * (prev.stripSize || 0);
+                                                return {
+                                                    ...prev,
+                                                    buyingUnitPrice: buy,
+                                                    buyingStripPrice: buyStrip,
+                                                    profitMargin: parseFloat(margin.toFixed(2))
+                                                };
+                                            });
+                                        }}
                                     />
                                 </FormField>
                                 {needsPackaging && formData.stripSize > 0 && (
@@ -720,7 +733,14 @@ export function ProductFormModal(props: ProductFormModalProps) {
                                         placeholder="0.00"
                                         step="0.01"
                                         value={formData.mrpUnitPrice || ''}
-                                        onChange={e => handleChange('mrpUnitPrice', parseFloat(e.target.value))}
+                                        onChange={e => {
+                                            const mrp = parseFloat(e.target.value) || 0;
+                                            setFormData(prev => ({
+                                                ...prev,
+                                                mrpUnitPrice: mrp,
+                                                sellingUnitPrice: prev.sellingUnitPrice === 0 ? mrp : prev.sellingUnitPrice
+                                            }));
+                                        }}
                                         required
                                     />
                                 </FormField>
@@ -743,14 +763,38 @@ export function ProductFormModal(props: ProductFormModalProps) {
                         {/* Selling Price Summary */}
                         <div className="bg-emerald-100/50 p-3 rounded-lg border border-emerald-200">
                             <p className="text-xs font-bold text-emerald-900 mb-2">Selling Price (Final)</p>
-                            <div className="grid grid-cols-1 gap-2">
-                                <div className="flex justify-between items-center bg-white p-2 rounded border border-emerald-100">
-                                    <span className="text-xs text-slate-600">Per Unit</span>
-                                    <span className="font-bold text-emerald-700">BDT {formData.sellingUnitPrice.toFixed(2)}</span>
-                                </div>
+                            <div className="space-y-3">
+                                <FormField label="Sales Price (Per Unit)" required>
+                                    <Input
+                                        type="number"
+                                        placeholder="0.00"
+                                        step="0.01"
+                                        value={formData.sellingUnitPrice || ''}
+                                        onChange={e => {
+                                            const sell = parseFloat(e.target.value) || 0;
+                                            setFormData(prev => {
+                                                const buy = prev.buyingUnitPrice || 0;
+                                                const margin = buy > 0 ? ((sell - buy) / buy) * 100 : 0;
+                                                const stripPrice = sell * (prev.stripSize || 0);
+                                                const boxPrice = sell * (prev.stripSize || 0) * (prev.boxSize || 0);
+
+                                                return {
+                                                    ...prev,
+                                                    sellingUnitPrice: sell,
+                                                    profitMargin: parseFloat(margin.toFixed(2)),
+                                                    sellingStripPrice: stripPrice,
+                                                    sellingBoxPrice: boxPrice
+                                                }
+                                            });
+                                        }}
+                                        required
+                                        className="bg-white"
+                                    />
+                                </FormField>
+
                                 {needsPackaging && formData.stripSize > 0 && (
                                     <div className="flex justify-between items-center bg-white p-2 rounded border border-emerald-100">
-                                        <span className="text-xs text-slate-600">Per Strip</span>
+                                        <span className="text-xs text-slate-600">Per Strip (Calculated)</span>
                                         <span className="font-bold text-emerald-700">BDT {formData.sellingStripPrice.toFixed(2)}</span>
                                     </div>
                                 )}

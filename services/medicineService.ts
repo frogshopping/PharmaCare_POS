@@ -176,6 +176,46 @@ export const medicineService = {
     },
 
     /**
+     * Create new rack
+     */
+    async createRack(name: string, location?: string): Promise<Rack> {
+        if (USE_MOCK_DATA) {
+            const newRack = { id: Date.now(), name, location };
+            mockRacks.push(newRack);
+            return Promise.resolve(newRack);
+        }
+
+        const response = await apiClient.post<Rack>(API_ENDPOINTS.RACKS, { name, location });
+        if (!response.success || !response.data) {
+            throw new Error(response.error || 'Failed to create rack');
+        }
+        return response.data;
+    },
+
+    /**
+     * Update rack
+     */
+    async updateRack(id: string | number, name: string, location?: string): Promise<Rack> {
+        // Implementation for API
+        const response = await apiClient.put<Rack>(`${API_ENDPOINTS.RACKS}/${id}`, { name, location });
+        if (!response.success || !response.data) {
+            throw new Error(response.error || 'Failed to update rack');
+        }
+        return response.data;
+    },
+
+    /**
+     * Delete rack
+     */
+    async deleteRack(id: string | number): Promise<void> {
+        // Implementation for API
+        const response = await apiClient.delete(`${API_ENDPOINTS.RACKS}/${id}`);
+        if (!response.success) {
+            throw new Error(response.error || 'Failed to delete rack');
+        }
+    },
+
+    /**
      * Get all generics
      */
     async getGenerics(): Promise<GenericName[]> {
