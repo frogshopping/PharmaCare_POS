@@ -85,7 +85,7 @@ export default function MedicineRackPage() {
 
         medicines.forEach(med => {
             const rackName = med.rackNo || med.rackLocation;
-            if (!rackName) {
+            if (!rackName || rackName === '---' || rackName === 'N/A') {
                 unassigned.push(med);
                 return;
             }

@@ -165,14 +165,20 @@ export const medicineService = {
             return Promise.resolve(mockRacks);
         }
 
-        const response = await apiClient.get<any[]>(API_ENDPOINTS.RACKS);
-        if (response.success && Array.isArray(response.data)) {
-            return response.data.map((item: any) => ({
+        const response = await apiClient.get<any>(API_ENDPOINTS.RACKS);
+
+        // Handle both { data: [...] } and [...] response formats
+        const racksData = (response.success && response.data)
+            ? (Array.isArray(response.data) ? response.data : response.data.data)
+            : null;
+
+        if (Array.isArray(racksData)) {
+            return racksData.map((item: any) => ({
                 id: item.id,
                 name: item.rack_name || item.name || 'Unknown Rack'
             }));
         }
-        return mockRacks;
+        return [];
     },
 
     /**
