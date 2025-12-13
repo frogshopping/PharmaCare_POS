@@ -5,7 +5,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/Input"
 import { Button } from "@/components/ui/Button"
 import { User, Phone, Mail, MapPin, AlertTriangle, Save, Edit } from "lucide-react"
-import { Customer } from "@/services/mockCustomerData"
+import { Customer } from "@/lib/types"
+import { customerService } from "@/services/customerService"
 
 interface EditCustomerModalProps {
     isOpen: boolean
@@ -19,8 +20,7 @@ export function EditCustomerModal({ isOpen, onClose, onSuccess, customer }: Edit
         name: "",
         phone: "",
         email: "",
-        address: "",
-        allergies: ""
+        address: ""
     })
 
     React.useEffect(() => {
@@ -29,8 +29,7 @@ export function EditCustomerModal({ isOpen, onClose, onSuccess, customer }: Edit
                 name: customer.name,
                 phone: customer.phone,
                 email: customer.email,
-                address: customer.address,
-                allergies: customer.allergies.join(', ')
+                address: customer.address
             })
         }
     }, [customer, isOpen])
@@ -39,7 +38,7 @@ export function EditCustomerModal({ isOpen, onClose, onSuccess, customer }: Edit
         setFormData(prev => ({ ...prev, [field]: value }))
     }
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
 
         if (!customer) return
@@ -50,17 +49,21 @@ export function EditCustomerModal({ isOpen, onClose, onSuccess, customer }: Edit
             return
         }
 
-        const updatedCustomer: Customer = {
-            ...customer,
-            name: formData.name,
-            phone: formData.phone,
-            email: formData.email,
-            address: formData.address,
-            allergies: formData.allergies.split(',').map(s => s.trim()).filter(Boolean)
+        try {
+            const updatedCustomerRaw = {
+                ...customer,
+                name: formData.name,
+                phone: formData.phone,
+                email: formData.email,
+                address: formData.address
+            };
+            const updated = await customerService.update(customer.id, updatedCustomerRaw);
+            onSuccess(updated)
+            onClose()
+        } catch (error) {
+            console.error(error);
+            alert('Failed to update customer');
         }
-
-        onSuccess(updatedCustomer)
-        onClose()
     }
 
     return (
@@ -118,22 +121,6 @@ export function EditCustomerModal({ isOpen, onClose, onSuccess, customer }: Edit
                                 value={formData.address}
                                 onChange={e => handleChange('address', e.target.value)}
                             />
-                        </div>
-
-                        {/* Medical Info Section */}
-                        <div className="bg-orange-50 p-4 rounded-xl border border-orange-100">
-                            <h4 className="text-sm font-bold text-orange-800 mb-2 flex items-center gap-2">
-                                <AlertTriangle size={16} />
-                                Medical Alert
-                            </h4>
-                            <label className="text-sm font-medium text-slate-700 mb-1.5 block">Known Allergies</label>
-                            <Input
-                                placeholder="e.g. Penicillin, Peanuts (comma separated)"
-                                value={formData.allergies}
-                                onChange={e => handleChange('allergies', e.target.value)}
-                                className="bg-white"
-                            />
-                            <p className="text-xs text-slate-500 mt-1">Important for drug interaction checks.</p>
                         </div>
                     </div>
 

@@ -227,13 +227,11 @@ export interface ApiResponse<T> {
 // ============================================
 
 export interface Customer {
-    id: string;
+    id: number;
     name: string;
     address: string;
     phone: string;
     email: string;
-    allergies: string[];
-    loyaltyPoints: number;
     memberSince: string;
     avatar?: string;
 }

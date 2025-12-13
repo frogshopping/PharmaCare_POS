@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Customer } from '@/services/mockCustomerData';
+import { Customer } from '@/lib/types';
 import { Edit, Trash2, Star, Mail, Phone } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -21,8 +21,6 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ customers, onEdit, onDele
                         <tr className="border-b border-slate-100 text-left bg-slate-50/50">
                             <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Customer</th>
                             <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Contact</th>
-                            <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Allergies</th>
-                            <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Loyalty Points</th>
                             <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Member Since</th>
                             <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Actions</th>
                         </tr>
@@ -51,25 +49,6 @@ const CustomerTable: React.FC<CustomerTableProps> = ({ customers, onEdit, onDele
                                             <Mail size={14} />
                                             <span className="text-sm">{customer.email}</span>
                                         </div>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4">
-                                    {customer.allergies.length > 0 ? (
-                                        <div className="flex flex-wrap gap-2">
-                                            {customer.allergies.map((allergy, index) => (
-                                                <Badge key={index} variant="danger">
-                                                    {allergy}
-                                                </Badge>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <span className="text-slate-400 text-sm">None</span>
-                                    )}
-                                </td>
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-1">
-                                        <Star size={16} className="fill-amber-400 text-amber-400" />
-                                        <span className="font-medium text-slate-700">{customer.loyaltyPoints}</span>
                                     </div>
                                 </td>
                                 <td className="px-6 py-4">

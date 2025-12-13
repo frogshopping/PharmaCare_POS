@@ -7,14 +7,14 @@ import { Input } from "@/components/ui/Input"
 import { UserPlus, User, Phone, Mail, MapPin, AlertTriangle } from "lucide-react"
 import { useFormState } from "@/lib/hooks/useFormState"
 import { CreateModalProps } from "@/lib/types"
+import { customerService } from "@/services/customerService"
 
 export function AddCustomerModal({ isOpen, onClose, onSuccess }: CreateModalProps) {
     const { formData, handleChange, handleReset, isSubmitting, setSubmitting } = useFormState({
         name: "",
         phone: "",
         email: "",
-        address: "",
-        allergies: ""
+        address: ""
     })
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -28,14 +28,7 @@ export function AddCustomerModal({ isOpen, onClose, onSuccess }: CreateModalProp
         setSubmitting(true)
 
         try {
-            console.log("Submitting Customer:", {
-                ...formData,
-                allergies: formData.allergies.split(',').map((s: string) => s.trim()).filter(Boolean)
-            })
-
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 500))
-
+            await customerService.create(formData);
             onSuccess()
             onClose()
             handleReset()
@@ -98,25 +91,6 @@ export function AddCustomerModal({ isOpen, onClose, onSuccess }: CreateModalProp
                         onChange={e => handleChange('address', e.target.value)}
                     />
                 </FormField>
-
-                {/* Medical Info Section */}
-                <div className="bg-orange-50 p-4 rounded-xl border border-orange-100">
-                    <h4 className="text-sm font-bold text-orange-800 mb-2 flex items-center gap-2">
-                        <AlertTriangle size={16} />
-                        Medical Alert
-                    </h4>
-                    <FormField
-                        label="Known Allergies"
-                        hint="Important for drug interaction checks."
-                    >
-                        <Input
-                            placeholder="e.g. Penicillin, Peanuts (comma separated)"
-                            value={formData.allergies}
-                            onChange={e => handleChange('allergies', e.target.value)}
-                            className="bg-white"
-                        />
-                    </FormField>
-                </div>
             </div>
         </FormModal>
     )
