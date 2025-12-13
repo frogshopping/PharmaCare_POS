@@ -31,11 +31,17 @@ export const medicineService = {
             });
         }
 
+        // For top-selling and low-selling, we need to fetch more data and sort client-side
+        // because the backend doesn't support sorting by totalSold
+        const needsClientSideSorting = status === 'top-selling' || status === 'low-selling';
+        const fetchLimit = needsClientSideSorting ? 1000 : limit; // Fetch more for sorting
+        const fetchPage = needsClientSideSorting ? 1 : page; // Always page 1 when sorting
+
         const queryParams = new URLSearchParams({
-            page: page.toString(),
-            limit: limit.toString(),
+            page: fetchPage.toString(),
+            limit: (fetchLimit + 1).toString(), // Request one extra item to bypass backend overwriting bug
             search,
-            status: status === 'all' ? '' : status,
+            status: status === 'all' || needsClientSideSorting ? '' : status, // Don't pass top/low-selling to backend
             rack
         });
 
@@ -44,8 +50,42 @@ export const medicineService = {
         // The API returns { success: true, data: [...], pagination: {...} }
         // apiClient wraps this in { success: true, data: { ...body } }
         if (response.success && response.data) {
+            let rawData = response.data.data || [];
+
+            // Remove the extra item (Pushti bug workaround)
+            rawData = rawData.slice(0, fetchLimit);
+
+            // Client-side sorting for top-selling and low-selling
+            if (needsClientSideSorting) {
+                rawData.sort((a: Medicine, b: Medicine) => {
+                    if (status === 'top-selling') {
+                        return (b.totalSold || 0) - (a.totalSold || 0); // Descending
+                    } else {
+                        return (a.totalSold || 0) - (b.totalSold || 0); // Ascending
+                    }
+                });
+
+                // Manual pagination
+                const startIndex = (page - 1) * limit;
+                const endIndex = startIndex + limit;
+                const paginatedData = rawData.slice(startIndex, endIndex);
+                const totalItems = rawData.length;
+                const totalPages = Math.ceil(totalItems / limit);
+
+                return {
+                    data: paginatedData,
+                    pagination: {
+                        currentPage: page,
+                        totalPages,
+                        totalItems,
+                        itemsPerPage: limit
+                    }
+                };
+            }
+
+            // For other filters, return as-is
             return {
-                data: response.data.data || [],
+                data: rawData,
                 pagination: response.data.pagination
             };
         }
@@ -54,16 +94,44 @@ export const medicineService = {
     },
 
     /**
+     * Get all racks with their medicines
+     */
+    async getRacksWithMedicines(): Promise<{ data: any[]; total_racks: number }> {
+        if (USE_MOCK_DATA) {
+            // Mock implementation if needed
+            return Promise.resolve({ data: [], total_racks: 0 });
+        }
+
+        const response = await apiClient.get<any>(API_ENDPOINTS.RACKS_MEDICINES);
+
+        if (response.success && response.data) {
+            // The API returns { data: [...], total_racks: number }
+            return {
+                data: response.data.data || [],
+                total_racks: response.data.total_racks || 0
+            };
+        }
+
+        return { data: [], total_racks: 0 };
+    },
+
+    /**
      * Get medicine by ID
      */
-    async getById(id: string): Promise<Medicine | null> {
+    async getById(id: string | number): Promise<Medicine | null> {
         if (USE_MOCK_DATA) {
-            const medicine = mockMedicines.find((m) => m.id === id);
+            const medicine = mockMedicines.find((m) => m.id === id.toString());
             return Promise.resolve(medicine || null);
         }
 
-        const response = await apiClient.get<Medicine>(API_ENDPOINTS.MEDICINE_BY_ID(id));
-        return response.success && response.data ? response.data : null;
+        const response = await apiClient.get<any>(API_ENDPOINTS.MEDICINE_BY_ID(id.toString()));
+
+        // The API returns { data: { ...medicine } }
+        if (response.success && response.data) {
+            return response.data.data || null;
+        }
+
+        return null;
     },
 
     /**

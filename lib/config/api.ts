@@ -19,6 +19,7 @@ export const API_ENDPOINTS = {
     MEDICINES: '/inventory/medicines',
     MEDICINE_BY_ID: (id: string) => `/inventory/medicines/${id}`,
     RACKS: '/inventory/racks',
+    RACKS_MEDICINES: '/inventory/racks/medicines',
     GENERICS: '/inventory/generics',
     CATEGORIES: '/catalog/categories',
     SUBCATEGORIES: '/catalog/subcategories',

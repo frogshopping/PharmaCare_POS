@@ -1,85 +1,116 @@
 export interface Sale {
     id: string; // Invoice ID
     customerName: string;
+    storeName: string;
     date: string; // ISO date string
     itemsCount: number;
-    totalAmount: number;
+    billingAmount: number;
+    paidAmount: number;
+    dueAmount: number;
+    returnAmount: number;
     paymentMethod: 'Cash' | 'Credit Card' | 'Debit Card' | 'Insurance' | 'Mobile Payment';
-    status: 'Completed' | 'Pending' | 'Refunded' | 'Cancelled';
+    orderType: 'Collection' | 'Delivery';
+    status: 'Paid' | 'Unpaid' | 'Partial' | 'Canceled';
+    postBy: string;
+    phone: string;
 }
 
 export const mockSales: Sale[] = [
     {
-        id: 'INV-001',
-        customerName: 'Sarah Johnson',
-        date: '2025-11-27T10:30:00',
+        id: 'CIN-2500200115755',
+        customerName: 'Shuvo (InComIT Soultion Intaernent)',
+        phone: '01682079053',
+        storeName: 'Family Health Care',
+        date: '2025-11-12T10:30:00',
         itemsCount: 3,
-        totalAmount: 156.00,
-        paymentMethod: 'Credit Card',
-        status: 'Completed'
-    },
-    {
-        id: 'INV-002',
-        customerName: 'Mike Smith',
-        date: '2025-11-27T09:45:00',
-        itemsCount: 2,
-        totalAmount: 89.50,
+        billingAmount: 70.00,
+        paidAmount: 0.00,
+        dueAmount: 70.00,
+        returnAmount: 0.00,
         paymentMethod: 'Cash',
-        status: 'Completed'
+        orderType: 'Collection',
+        status: 'Unpaid',
+        postBy: 'IQBAL'
     },
     {
-        id: 'INV-003',
-        customerName: 'Emily Davis',
-        date: '2025-11-27T08:15:00',
+        id: 'CIN-2500200115754',
+        customerName: 'Walk-in Customer',
+        phone: '',
+        storeName: 'Family Health Care',
+        date: '2025-11-12T09:45:00',
+        itemsCount: 2,
+        billingAmount: 197.00,
+        paidAmount: 197.00,
+        dueAmount: 0.00,
+        returnAmount: 0.00,
+        paymentMethod: 'Cash',
+        orderType: 'Collection',
+        status: 'Paid',
+        postBy: 'IQBAL'
+    },
+    {
+        id: 'CIN-2500200115753',
+        customerName: 'Walk-in Customer',
+        phone: '',
+        storeName: 'Family Health Care',
+        date: '2025-11-12T08:15:00',
         itemsCount: 5,
-        totalAmount: 234.00,
-        paymentMethod: 'Insurance',
-        status: 'Pending'
+        billingAmount: 40.00,
+        paidAmount: 40.00,
+        dueAmount: 0.00,
+        returnAmount: 0.00,
+        paymentMethod: 'Cash',
+        orderType: 'Collection',
+        status: 'Paid',
+        postBy: 'IQBAL'
     },
     {
-        id: 'INV-004',
-        customerName: 'James Wilson',
-        date: '2025-11-26T16:20:00',
+        id: 'CIN-2500200115752',
+        customerName: 'Walk-in Customer',
+        phone: '',
+        storeName: 'Family Health Care',
+        date: '2025-11-12T16:20:00',
         itemsCount: 1,
-        totalAmount: 67.25,
-        paymentMethod: 'Debit Card',
-        status: 'Completed'
+        billingAmount: 245.00,
+        paidAmount: 245.00,
+        dueAmount: 0.00,
+        returnAmount: 0.00,
+        paymentMethod: 'Cash',
+        orderType: 'Collection',
+        status: 'Paid',
+        postBy: 'IQBAL'
     },
     {
-        id: 'INV-005',
-        customerName: 'Lisa Brown',
-        date: '2025-11-26T14:10:00',
+        id: 'CIN-2500200115751',
+        customerName: 'Walk-in Customer',
+        phone: '',
+        storeName: 'Family Health Care',
+        date: '2025-11-12T14:10:00',
         itemsCount: 4,
-        totalAmount: 145.80,
-        paymentMethod: 'Credit Card',
-        status: 'Completed'
+        billingAmount: 60.00,
+        paidAmount: 60.00,
+        dueAmount: 0.00,
+        returnAmount: 0.00,
+        paymentMethod: 'Cash',
+        orderType: 'Collection',
+        status: 'Paid',
+        postBy: 'IQBAL'
     },
     {
-        id: 'INV-006',
-        customerName: 'Robert Taylor',
-        date: '2025-11-26T11:30:00',
+        id: 'CIN-2500200115747',
+        customerName: 'Mukti Chokroboti Milon Chokroboti Popi',
+        phone: '01621371745',
+        storeName: 'Family Health Care',
+        date: '2025-11-12T11:30:00',
         itemsCount: 2,
-        totalAmount: 98.50,
+        billingAmount: 160.00,
+        paidAmount: 55.00,
+        dueAmount: 105.00,
+        returnAmount: 0.00,
         paymentMethod: 'Cash',
-        status: 'Completed'
-    },
-    {
-        id: 'INV-007',
-        customerName: 'Jennifer Clark',
-        date: '2025-11-25T15:45:00',
-        itemsCount: 6,
-        totalAmount: 312.40,
-        paymentMethod: 'Insurance',
-        status: 'Completed'
-    },
-    {
-        id: 'INV-008',
-        customerName: 'David Miller',
-        date: '2025-11-25T09:00:00',
-        itemsCount: 1,
-        totalAmount: 12.99,
-        paymentMethod: 'Cash',
-        status: 'Refunded'
+        orderType: 'Collection',
+        status: 'Unpaid',
+        postBy: 'IQBAL'
     }
 ];
 

@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { medicineService } from '@/services/medicineService';
-import { Medicine, Rack } from '@/lib/types';
+import { Medicine, Rack, RackWithMedicines, RackMedicine } from '@/lib/types';
 import { Search, Package, Download, Printer, FileSpreadsheet, Eye, ChevronDown, ChevronUp, Plus, Filter, AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
@@ -13,16 +13,20 @@ import { AddRackModal } from '@/components/medicine-rack/AddRackModal';
 interface RackCategory {
     id: string | number;
     name: string;
+    location?: string;
     icon: string;
     color: string;
-    medicines: Medicine[];
-    isVirtual?: boolean; // True if inferred from medicine data but not in Racks DB
+    medicines: RackMedicine[];
+    isVirtual?: boolean;
 }
 
 type SortFilter = 'all' | 'top-selling' | 'low-selling';
 
 const RACK_COLORS = [
     'bg-orange-50 border-orange-200',
+
+
+
     'bg-red-50 border-red-200',
     'bg-blue-50 border-blue-200',
     'bg-purple-50 border-purple-200',
@@ -35,11 +39,11 @@ const RACK_COLORS = [
 ];
 
 export default function MedicineRackPage() {
-    const [medicines, setMedicines] = useState<Medicine[]>([]);
-    const [dbRacks, setDbRacks] = useState<Rack[]>([]);
+    const [racksData, setRacksData] = useState<RackWithMedicines[]>([]); 
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
     const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(null);
+    const [loadingMedicine, setLoadingMedicine] = useState(false);
     const [expandedRacks, setExpandedRacks] = useState<Set<string | number>>(new Set());
     const [rackFilters, setRackFilters] = useState<Record<string, SortFilter>>({});
     const [isAddRackModalOpen, setIsAddRackModalOpen] = useState(false);
@@ -47,12 +51,9 @@ export default function MedicineRackPage() {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [medsResponse, racksData] = await Promise.all([
-                medicineService.getAll(1, 1000, '', 'all'), // Fetch all for overview
-                medicineService.getRacks()
-            ]);
-            setMedicines(medsResponse.data);
-            setDbRacks(racksData);
+            const response = await medicineService.getRacksWithMedicines();
+            console.log('Racks with medicines:', response);
+            setRacksData(response.data);
         } catch (error) {
             console.error('Error loading data:', error);
         } finally {
@@ -64,66 +65,18 @@ export default function MedicineRackPage() {
         fetchData();
     }, []);
 
-    // Categorize medicines by Rack
+    // Transform API data to RackCategory format
     const categorizedRacks = useMemo(() => {
-        const categoriesMap = new Map<string, RackCategory>();
-
-        // 1. Initialize with DB Racks
-        dbRacks.forEach((rack, index) => {
-            categoriesMap.set(rack.name.toLowerCase(), {
-                id: rack.id,
-                name: rack.name,
-                icon: '📦',
-                color: RACK_COLORS[index % RACK_COLORS.length],
-                medicines: [],
-                isVirtual: false
-            });
-        });
-
-        // 2. Distribute Medicines
-        const unassigned: Medicine[] = [];
-
-        medicines.forEach(med => {
-            const rackName = med.rackNo || med.rackLocation;
-            if (!rackName || rackName === '---' || rackName === 'N/A') {
-                unassigned.push(med);
-                return;
-            }
-
-            const lowerName = rackName.toLowerCase();
-
-            if (categoriesMap.has(lowerName)) {
-                categoriesMap.get(lowerName)!.medicines.push(med);
-            } else {
-                // Found a rack name in medicine that isn't in DB (Virtual Rack)
-                const newRack: RackCategory = {
-                    id: `virtual-${lowerName}`,
-                    name: rackName, // Keep original case
-                    icon: '🔖',
-                    color: 'bg-slate-50 border-slate-200', // Default color
-                    medicines: [med],
-                    isVirtual: true
-                };
-                categoriesMap.set(lowerName, newRack);
-            }
-        });
-
-        // 3. Convert to Array and Add Unassigned
-        const result = Array.from(categoriesMap.values());
-
-        if (unassigned.length > 0) {
-            result.push({
-                id: 'unassigned',
-                name: 'Unassigned / No Rack',
-                icon: '⚠️',
-                color: 'bg-gray-100 border-gray-200',
-                medicines: unassigned,
-                isVirtual: true
-            });
-        }
-
-        return result;
-    }, [medicines, dbRacks]);
+        return racksData.map((rackData, index) => ({
+            id: rackData.rack.id,
+            name: rackData.rack.name,
+            location: rackData.rack.location,
+            icon: '📦',
+            color: RACK_COLORS[index % RACK_COLORS.length],
+            medicines: rackData.medicines,
+            isVirtual: false
+        }));
+    }, [racksData]);
 
     // Filter and sort
     const filteredRacks = useMemo(() => {
@@ -135,15 +88,14 @@ export default function MedicineRackPage() {
             racks = racks.map(rack => ({
                 ...rack,
                 medicines: rack.medicines.filter(med =>
-                    med.name.toLowerCase().includes(lowerSearch) ||
-                    med.genericName.toLowerCase().includes(lowerSearch) ||
-                    med.manufacture.toLowerCase().includes(lowerSearch) ||
-                    med.productCode?.toLowerCase().includes(lowerSearch)
+                    med.medicine_name.toLowerCase().includes(lowerSearch) ||
+                    med.generic_name.toLowerCase().includes(lowerSearch) ||
+                    med.code?.toLowerCase().includes(lowerSearch)
                 )
             })).filter(rack => rack.medicines.length > 0);
         }
 
-        // Apply per-rack sort
+        // Apply per-rack sort (based on stock as proxy since we don't have totalSold in RackMedicine)
         racks = racks.map(rack => {
             const filter = rackFilters[rack.id.toString()] || 'all';
             if (filter === 'all') return rack;
@@ -151,9 +103,10 @@ export default function MedicineRackPage() {
             return {
                 ...rack,
                 medicines: [...rack.medicines].sort((a, b) => {
-                    const aSold = a.totalSold || 0;
-                    const bSold = b.totalSold || 0;
-                    return filter === 'top-selling' ? bSold - aSold : aSold - bSold;
+                    // Using stock as a proxy for selling (higher stock might mean less sold)
+                    const aStock = a.stock || 0;
+                    const bStock = b.stock || 0;
+                    return filter === 'top-selling' ? aStock - bStock : bStock - aStock;
                 })
             };
         });
@@ -189,14 +142,26 @@ export default function MedicineRackPage() {
         }
     };
 
-    const handleView = (medicine: Medicine) => {
-        setSelectedMedicine(medicine);
+    const handleView = async (medicine: RackMedicine) => {
+        try {
+            setLoadingMedicine(true);
+            const fullMedicine = await medicineService.getById(medicine.id);
+            if (fullMedicine) {
+                setSelectedMedicine(fullMedicine);
+            } else {
+                console.error('Medicine not found');
+                alert('Failed to load medicine details');
+            }
+        } catch (error) {
+            console.error('Error loading medicine:', error);
+            alert('Failed to load medicine details');
+        } finally {
+            setLoadingMedicine(false);
+        }
     };
 
-    // NOTE: Deletion is typically handled in Inventory List, keeping readonly view here or redirecting?
-    // Removed direct delete to keep it safer.
-
-    const totalMedicines = medicines.length;
+    // Calculate total medicines from racks
+    const totalMedicines = racksData.reduce((sum, rack) => sum + rack.total_medicines, 0);
 
     return (
         <DashboardLayout>
@@ -278,7 +243,8 @@ export default function MedicineRackPage() {
                                                         <span className="text-[10px] bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded">Virtual</span>
                                                     )}
                                                 </div>
-                                                <p className="text-xs text-slate-500">{rack.medicines.length} medicines</p>
+                                                <p className="text-xs text-slate-500">{rack.location || 'No location'}</p>
+                                                <p className="text-xs text-slate-400">{rack.medicines.length} medicines</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-3">
@@ -329,16 +295,15 @@ export default function MedicineRackPage() {
                                                                 className="hover:bg-blue-50/30 transition-colors cursor-pointer"
                                                                 onClick={() => handleView(medicine)}
                                                             >
-                                                                <td className="border border-slate-300 px-2 py-1.5 text-slate-500 text-center">{idx + 1}</td>
+                                                                <td className="border border-slate-300 px-2 py-1.5 text-slate-500 text-center">{medicine.srl_no}</td>
                                                                 <td className="border border-slate-300 px-2 py-1.5 text-slate-600 font-mono text-[10px]">
-                                                                    {medicine.productCode}
+                                                                    {medicine.code}
                                                                 </td>
                                                                 <td className="border border-slate-300 px-2 py-1.5">
-                                                                    <div className="font-semibold text-slate-800">{medicine.name}</div>
-                                                                    <div className="text-[10px] text-slate-500 mt-0.5">{medicine.type || 'Tablet'} • {medicine.manufacture}</div>
+                                                                    <div className="font-semibold text-slate-800">{medicine.medicine_name}</div>
                                                                 </td>
                                                                 <td className="border border-slate-300 px-2 py-1.5 text-slate-600">
-                                                                    {medicine.genericName || '-'}
+                                                                    {medicine.generic_name || '-'}
                                                                 </td>
                                                                 <td className="border border-slate-300 px-2 py-1.5 text-slate-600">
                                                                     {medicine.strength || '-'}
@@ -347,11 +312,11 @@ export default function MedicineRackPage() {
                                                                     ৳{medicine.price.toFixed(2)}
                                                                 </td>
                                                                 <td className="border border-slate-300 px-2 py-1.5 text-center">
-                                                                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ${medicine.inStock === 0 ? 'bg-red-100 text-red-700' :
-                                                                        medicine.inStock < 20 ? 'bg-amber-100 text-amber-700' :
+                                                                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ${medicine.stock === 0 ? 'bg-red-100 text-red-700' :
+                                                                        medicine.stock < 20 ? 'bg-amber-100 text-amber-700' :
                                                                             'bg-emerald-100 text-emerald-700'
                                                                         }`}>
-                                                                        {medicine.inStock}
+                                                                        {medicine.stock}
                                                                     </span>
                                                                 </td>
                                                                 <td className="border border-slate-300 px-2 py-1.5 text-center" onClick={(e) => e.stopPropagation()}>
@@ -359,8 +324,9 @@ export default function MedicineRackPage() {
                                                                         size="sm"
                                                                         className="h-6 text-[10px] px-2 bg-blue-600 hover:bg-blue-700 text-white"
                                                                         onClick={() => handleView(medicine)}
+                                                                        disabled={loadingMedicine}
                                                                     >
-                                                                        <Eye size={12} className="mr-1" /> View
+                                                                        <Eye size={12} className="mr-1" /> {loadingMedicine ? 'Loading...' : 'View'}
                                                                     </Button>
                                                                 </td>
                                                             </tr>

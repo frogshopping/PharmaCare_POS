@@ -42,14 +42,16 @@ export interface Medicine {
     price: number;
     mrp?: number; // Maximum Retail Price
     profitMargin?: number; // Profit margin percentage
-    rackNo: string;
+    rackNo: string; // Legacy: rack name (deprecated, use rackId instead)
+    rackId?: number | string; // Foreign Key to Rack.id
+    rack_id?: number | string; // Alternative FK field name (snake_case from backend)
     totalPurchase: number;
     totalSold: number;
     inStock: number;
     stockStatus: 'Low Stock' | 'Stock Alert' | 'Normal';
     expiryDate?: string;
     type?: 'Tablet' | 'Syrup' | 'Capsule' | 'Injection' | 'Suspension' | 'Cream' | 'Other';
-    rackLocation?: string;
+    rackLocation?: string; // Legacy: rack location string
     batchId?: string;
     supplier?: string;
     purchaseDate?: string;
@@ -135,6 +137,33 @@ export interface Rack {
     id: number;
     name: string;
     name_en?: string;
+}
+
+// Response from /api/inventory/racks/medicines
+export interface RackMedicine {
+    id: number;
+    srl_no: number;
+    code: string;
+    medicine_name: string;
+    generic_name: string;
+    strength: string;
+    price: number;
+    stock: number;
+}
+
+export interface RackWithMedicines {
+    rack: {
+        id: number;
+        name: string;
+        location: string;
+    };
+    medicines: RackMedicine[];
+    total_medicines: number;
+}
+
+export interface RackMedicinesResponse {
+    data: RackWithMedicines[];
+    total_racks: number;
 }
 
 export interface GenericName {

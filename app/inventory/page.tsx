@@ -4,6 +4,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import MedicineTable from '@/components/catalog/MedicineTable';
 import Pagination from '@/components/catalog/Pagination';
+import { useDebounce } from '@/lib/hooks/useDebounce';
 import { Medicine, getMedicines, deleteMedicine } from '@/services/api';
 import { ProductFormModal } from '@/components/inventory/ProductFormModal';
 import {
@@ -39,6 +40,7 @@ export default function InventoryPage() {
     const [viewMode, setViewMode] = useState<'list' | 'rack'>('list');
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const debouncedSearchQuery = useDebounce(searchQuery, 500); // 500ms delay
     const [isLegendOpen, setIsLegendOpen] = useState(false);
 
     // === Inventory List State ===
@@ -76,8 +78,9 @@ export default function InventoryPage() {
 
             // Fetch Inventory Data with Pagination & Filtering
             // Cast to compatibility type if needed, but updated service returns { data, pagination }
-            const result: any = await getMedicines(currentPage, itemsPerPage, searchQuery, statusFilter);
+            const result: any = await getMedicines(currentPage, itemsPerPage, debouncedSearchQuery, statusFilter);
 
+            console.log(result);
             // Handle both legacy (array) and new (object) return types for safety
             const fetchedMedicines = Array.isArray(result) ? result : (result.data || []);
             const paginationInfo = !Array.isArray(result) ? result.pagination : null;
@@ -93,21 +96,22 @@ export default function InventoryPage() {
                 setTotalItems(fetchedMedicines.length);
             }
 
-            // Fetch Stats (Parallel Requests Approximation)
-            // Only fetch if we are on the first page to save bandwidth, or periodically? 
-            // For now, fetch on every load to ensure accuracy.
+            // Fetch Stats - Backend now provides accurate counts!
             const [lowStockRes, outOfStockRes, allRes] = await Promise.all([
-                // fetch total counts for stats
                 getMedicines(1, 1, '', 'low').catch(() => ({ pagination: { totalItems: 0 } })),
                 getMedicines(1, 1, '', 'out').catch(() => ({ pagination: { totalItems: 0 } })),
-                getMedicines(1, 1, '', 'all').catch(() => ({ pagination: { totalItems: 0 } })) // total count
+                getMedicines(1, 1, '', 'all').catch(() => ({ pagination: { totalItems: 0 } }))
             ]);
 
+            const totalCount = (allRes as any).pagination?.totalItems || 0;
+            const outOfStockCount = (outOfStockRes as any).pagination?.totalItems || 0;
+            const lowStockCount = (lowStockRes as any).pagination?.totalItems || 0;
+
             setStats({
-                total: (allRes as any).pagination?.totalItems || 0,
-                lowStock: (lowStockRes as any).pagination?.totalItems || 0,
-                outOfStock: (outOfStockRes as any).pagination?.totalItems || 0,
-                goodStock: ((allRes as any).pagination?.totalItems || 0) - ((lowStockRes as any).pagination?.totalItems || 0) - ((outOfStockRes as any).pagination?.totalItems || 0)
+                total: totalCount,
+                lowStock: lowStockCount,
+                outOfStock: outOfStockCount,
+                goodStock: totalCount - outOfStockCount - lowStockCount // In stock (not low, not out)
             });
 
             // Fetch Rack Data (Simulated for now, as API doesn't support visual rack view yet)
@@ -124,7 +128,7 @@ export default function InventoryPage() {
 
     useEffect(() => {
         fetchData();
-    }, [currentPage, statusFilter, searchQuery]); // Re-fetch when these change
+    }, [currentPage, statusFilter, debouncedSearchQuery]); // Re-fetch when these change
 
     // === Derived Stats (Shared) ===
     // This useMemo is no longer needed as stats are fetched directly
@@ -182,10 +186,10 @@ export default function InventoryPage() {
         // Unified search for racks
         const lowerQuery = searchQuery.toLowerCase();
         return rackData.map(category => {
-            const matchesCategory = category.title.toLowerCase().includes(lowerQuery);
+            const matchesCategory = (category.title?.toLowerCase() || '').includes(lowerQuery);
             const matchingMedicines = category.medicines.filter(m =>
-                m.name.toLowerCase().includes(lowerQuery) ||
-                m.manufacturer.toLowerCase().includes(lowerQuery)
+                (m.name?.toLowerCase() || '').includes(lowerQuery) ||
+                (m.manufacturer?.toLowerCase() || '').includes(lowerQuery)
             );
 
             if (matchesCategory || matchingMedicines.length > 0) {
@@ -353,6 +357,11 @@ export default function InventoryPage() {
                                         setSearchQuery(selectedMed.name);
                                     }}
                                     onClear={clearFilters}
+                                    onSearchTermChange={(term) => setSearchQuery(term)}
+                                    fetchSuggestions={async (term) => {
+                                        const result = await getMedicines(1, 50, term); // Fetch up to 50 suggestions
+                                        return result.data;
+                                    }}
                                 />
                             ) : (
                                 <div className="relative">
