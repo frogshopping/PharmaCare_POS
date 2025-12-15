@@ -1,0 +1,486 @@
+'use client';
+
+import React, { useEffect, useState, useMemo } from 'react';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import MedicineTable from '@/components/catalog/MedicineTable';
+import Pagination from '@/components/catalog/Pagination';
+import { useDebounce } from '@/lib/hooks/useDebounce';
+import { Medicine, getMedicines, deleteMedicine } from '@/services/api';
+import { ProductFormModal } from '@/components/inventory/ProductFormModal';
+import {
+    Search,
+    Plus,
+    Filter,
+    Package,
+    AlertTriangle,
+    AlertCircle,
+    CheckCircle2,
+    X,
+    SlidersHorizontal,
+    Box,
+    LayoutGrid,
+    List,
+    Grid,
+    HelpCircle
+} from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Card } from '@/components/ui/Card';
+
+// Rack Imports
+import RackCard from '@/components/medicine-rack/RackCard';
+import RackDetailModal from '@/components/medicine-rack/RackDetailModal';
+import MedicineDetailsModal from '@/components/medicine-rack/MedicineDetailsModal';
+import KeyLegendModal from '@/components/medicine-rack/KeyLegendModal';
+import { getDummyRackData, DummyRackCategory, DummyMedicine } from '@/services/rackDummyData';
+import { SearchWithSuggestions } from '@/components/inventory/SearchWithSuggestions';
+
+export default function InventoryPage() {
+    // === Shared State ===
+    const [viewMode, setViewMode] = useState<'list' | 'rack'>('list');
+    const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState('');
+    const debouncedSearchQuery = useDebounce(searchQuery, 500); // 500ms delay
+    const [isLegendOpen, setIsLegendOpen] = useState(false);
+
+    // === Inventory List State ===
+    const [medicines, setMedicines] = useState<Medicine[]>([]);
+    const [isAddProductOpen, setIsAddProductOpen] = useState(false);
+    const [isEditProductOpen, setIsEditProductOpen] = useState(false);
+    const [editingProduct, setEditingProduct] = useState<Medicine | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
+    const [statusFilter, setStatusFilter] = useState<'all' | 'low' | 'out' | 'top-selling' | 'low-selling'>('all');
+
+    // === Stats State ===
+    const [stats, setStats] = useState({
+        total: 0,
+        lowStock: 0,
+        outOfStock: 0,
+        goodStock: 0
+    });
+
+    // === Rack View State ===
+    const [rackData, setRackData] = useState<DummyRackCategory[]>([]);
+    const [selectedCategory, setSelectedCategory] = useState<DummyRackCategory | null>(null);
+    const [selectedRackMedicine, setSelectedRackMedicine] = useState<DummyMedicine | null>(null); // For rack view
+    const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(null); // For list view
+
+    const itemsPerPage = 20;
+
+    // === Data Fetching ===
+    const fetchData = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            // Fetch Inventory Data with Pagination & Filtering
+            // Cast to compatibility type if needed, but updated service returns { data, pagination }
+            const result: any = await getMedicines(currentPage, itemsPerPage, debouncedSearchQuery, statusFilter);
+
+            console.log(result);
+            // Handle both legacy (array) and new (object) return types for safety
+            const fetchedMedicines = Array.isArray(result) ? result : (result.data || []);
+            const paginationInfo = !Array.isArray(result) ? result.pagination : null;
+
+            setMedicines(fetchedMedicines);
+
+            if (paginationInfo) {
+                setTotalPages(paginationInfo.totalPages);
+                setTotalItems(paginationInfo.totalItems);
+            } else {
+                // Fallback if API returns plain array
+                setTotalPages(1);
+                setTotalItems(fetchedMedicines.length);
+            }
+
+            // Fetch Stats - Backend now provides accurate counts!
+            const [lowStockRes, outOfStockRes, allRes] = await Promise.all([
+                getMedicines(1, 1, '', 'low').catch(() => ({ pagination: { totalItems: 0 } })),
+                getMedicines(1, 1, '', 'out').catch(() => ({ pagination: { totalItems: 0 } })),
+                getMedicines(1, 1, '', 'all').catch(() => ({ pagination: { totalItems: 0 } }))
+            ]);
+
+            const totalCount = (allRes as any).pagination?.totalItems || 0;
+            const outOfStockCount = (outOfStockRes as any).pagination?.totalItems || 0;
+            const lowStockCount = (lowStockRes as any).pagination?.totalItems || 0;
+
+            setStats({
+                total: totalCount,
+                lowStock: lowStockCount,
+                outOfStock: outOfStockCount,
+                goodStock: totalCount - outOfStockCount - lowStockCount // In stock (not low, not out)
+            });
+
+            // Fetch Rack Data (Simulated for now, as API doesn't support visual rack view yet)
+            const racks = getDummyRackData();
+            setRackData(racks);
+
+        } catch (err) {
+            console.error('Error fetching data:', err);
+            setError('Failed to load inventory data.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, [currentPage, statusFilter, debouncedSearchQuery]); // Re-fetch when these change
+
+    // === Filtering Logic (Rack View Only) ===
+    // List view filtering is now Server-Side
+    const filteredRacks = useMemo(() => {
+        if (!searchQuery) return rackData;
+
+        // Unified search for racks
+        const lowerQuery = searchQuery.toLowerCase();
+        return rackData.map(category => {
+            const matchesCategory = (category.title?.toLowerCase() || '').includes(lowerQuery);
+            const matchingMedicines = category.medicines.filter(m =>
+                (m.name?.toLowerCase() || '').includes(lowerQuery) ||
+                (m.manufacturer?.toLowerCase() || '').includes(lowerQuery)
+            );
+
+            if (matchesCategory || matchingMedicines.length > 0) {
+                return {
+                    ...category,
+                    medicines: matchesCategory ? category.medicines : matchingMedicines
+                };
+            }
+            return null;
+        }).filter(Boolean) as DummyRackCategory[];
+    }, [rackData, searchQuery]);
+
+
+    // === Handlers ===
+    const clearFilters = () => {
+        setSearchQuery('');
+        setStatusFilter('all');
+        setCurrentPage(1);
+    };
+
+    const handleDelete = async (medicine: Medicine) => {
+        if (!confirm(`Are you sure you want to delete ${medicine.name}?`)) return;
+        try {
+            await deleteMedicine(medicine.id);
+            fetchData(); // Reload data
+        } catch (error) {
+            console.error('Failed to delete medicine:', error);
+            alert('Failed to delete medicine');
+        }
+    };
+
+    const handleAddSuccess = () => fetchData();
+    const handleEditSuccess = (updatedProduct: Partial<Medicine> & { id: string }) => {
+        // setMedicines(prev => prev.map(m => m.id === updatedProduct.id ? { ...m, ...updatedProduct } : m));
+        // setIsEditProductOpen(false);
+        // setEditingProduct(null);
+        fetchData(); // Reload data after edit
+    };
+
+    // Handler for Rack Grid Items (DummyMedicine type)
+    const handleRackMedicineClick = (medicine: DummyMedicine) => {
+        setSelectedCategory(null);
+        // Convert DummyMedicine to Medicine format for the unified modal
+        const mappedMed: Medicine = {
+            id: `rack-${Date.now()}`,
+            srlNo: 0,
+            name: medicine.name,
+            barcode: '',
+            productCode: medicine.productCode,
+            strength: medicine.strength,
+            manufacture: medicine.manufacturer,
+            genericName: medicine.genericName,
+            price: medicine.sellingPrice,
+            buyingPrice: medicine.tradePrice,
+            vat: 0,
+            rackNo: '',
+            totalPurchase: 0,
+            totalSold: 0,
+            inStock: medicine.inStock,
+            stockStatus: medicine.inStock === 0 ? 'Low Stock' : medicine.inStock < 20 ? 'Stock Alert' : 'Normal',
+            type: medicine.type,
+            expiryDate: medicine.expiryDate,
+            batchId: medicine.batchId,
+            supplier: medicine.supplier,
+            purchaseDate: medicine.purchaseDate,
+        };
+        setTimeout(() => setSelectedMedicine(mappedMed), 100);
+    };
+
+    // Handler for Inventory List Items (Medicine type from API)
+    const handleListMedicineView = (medicine: Medicine) => {
+        setSelectedMedicine(medicine);
+    };
+
+
+    const hasActiveFilters = searchQuery !== '' || statusFilter !== 'all';
+
+
+    return (
+        <DashboardLayout>
+            <div className="flex-1 flex flex-col h-full bg-slate-50 overflow-hidden relative">
+
+                {/* === Unified Header === */}
+                <div className="px-6 py-4 bg-white border-b border-slate-200">
+                    <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <h1 className="text-xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
+                                <div className="p-1.5 bg-blue-600 rounded-lg shadow-lg shadow-blue-600/20 text-white">
+                                    <Box size={20} />
+                                </div>
+                                Inventory Management
+                            </h1>
+                            <p className="text-slate-500 text-xs mt-0.5 ml-9">Track stock, pricing, and organized racks</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                className="bg-white text-slate-600 border-slate-200 gap-2 shadow-sm h-8 text-xs"
+                                onClick={() => setIsLegendOpen(true)}
+                            >
+                                <HelpCircle size={14} /> Icon Guide
+                            </Button>
+                            <Button
+                                className="bg-blue-600 hover:bg-blue-700 text-white gap-2 shadow-sm h-8 text-xs"
+                                onClick={() => setIsAddProductOpen(true)}
+                            >
+                                <Plus size={14} /> Add Product
+                            </Button>
+                        </div>
+                    </div>
+
+                    {/* === Stats (Universal) === */}
+                    <div className="max-w-[1600px] mx-auto mt-4 grid grid-cols-1 md:grid-cols-4 gap-3">
+                        <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between group hover:border-blue-300 transition-colors">
+                            <div>
+                                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Total Products</p>
+                                <h3 className="text-xl font-bold text-slate-800 mt-0.5">{stats.total}</h3>
+                            </div>
+                            <div className="p-2 bg-slate-50 text-slate-400 rounded-lg group-hover:text-blue-600 group-hover:bg-blue-50 transition-colors">
+                                <Package size={18} />
+                            </div>
+                        </div>
+                        <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between group hover:border-emerald-300 transition-colors">
+                            <div>
+                                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">In Stock</p>
+                                <h3 className="text-xl font-bold text-slate-800 mt-0.5">{stats.goodStock}</h3>
+                            </div>
+                            <div className="p-2 bg-slate-50 text-slate-400 rounded-lg group-hover:text-emerald-600 group-hover:bg-emerald-50 transition-colors">
+                                <CheckCircle2 size={18} />
+                            </div>
+                        </div>
+                        <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between group hover:border-amber-300 transition-colors">
+                            <div>
+                                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Low Stock</p>
+                                <h3 className="text-xl font-bold text-slate-800 mt-0.5">{stats.lowStock}</h3>
+                            </div>
+                            <div className="p-2 bg-slate-50 text-slate-400 rounded-lg group-hover:text-amber-600 group-hover:bg-amber-50 transition-colors">
+                                <AlertCircle size={18} />
+                            </div>
+                        </div>
+                        <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between group hover:border-red-300 transition-colors">
+                            <div>
+                                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Out of Stock</p>
+                                <h3 className="text-xl font-bold text-slate-800 mt-0.5">{stats.outOfStock}</h3>
+                            </div>
+                            <div className="p-2 bg-slate-50 text-slate-400 rounded-lg group-hover:text-red-600 group-hover:bg-red-50 transition-colors">
+                                <AlertTriangle size={18} />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* === Unified Toolbar === */}
+                <div className="px-6 py-4">
+                    <div className="max-w-[1600px] mx-auto bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap gap-4 items-end">
+
+
+                        {/* Search (Universal) */}
+                        <div className="space-y-1.5 flex-1 min-w-[250px]">
+                            <label className="text-xs font-semibold text-slate-500 uppercase">Search by Name/Strength</label>
+                            {viewMode === 'list' ? (
+                                <SearchWithSuggestions
+                                    medicines={medicines}
+                                    onSelect={(selectedMed: Medicine) => {
+                                        setSearchQuery(selectedMed.name);
+                                    }}
+                                    onClear={clearFilters}
+                                    onSearchTermChange={(term) => setSearchQuery(term)}
+                                    fetchSuggestions={async (term) => {
+                                        const result = await getMedicines(1, 50, term); // Fetch up to 50 suggestions
+                                        return result.data;
+                                    }}
+                                />
+                            ) : (
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                    <Input
+                                        placeholder="Search racks..."
+                                        className="pl-10 h-10"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+
+                        {/* Filters (List View Only) */}
+                        {viewMode === 'list' && (
+                            <div className="space-y-1.5 flex-initial min-w-[200px]">
+                                <label className="text-xs font-semibold text-slate-500 uppercase">Sort / Filter</label>
+                                <select
+                                    className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-600"
+                                    value={statusFilter}
+                                    onChange={(e) => {
+                                        setStatusFilter(e.target.value as any);
+                                        setCurrentPage(1); // Reset page on filter change
+                                    }}
+                                >
+                                    <option value="all">All Products</option>
+                                    <option value="top-selling">Top Selling</option>
+                                    <option value="low-selling">Low Selling</option>
+                                    <option value="low">Low Stock only</option>
+                                    <option value="out">Out of Stock only</option>
+                                </select>
+                            </div>
+                        )}
+
+                        {hasActiveFilters && (
+                            <Button
+                                variant="ghost"
+                                className="h-10 text-red-500 hover:bg-red-50"
+                                onClick={clearFilters}
+                            >
+                                Clear
+                            </Button>
+                        )}
+                    </div>
+                </div>
+
+                {/* === Main Content === */}
+                <div className="flex-1 overflow-y-auto px-8 pb-8 custom-scrollbar">
+                    <div className="max-w-[1600px] mx-auto">
+                        {loading && medicines.length === 0 ? (
+                            <div className="flex justify-center p-24">
+                                <div className="flex flex-col items-center gap-4">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                                    <p className="text-slate-500 text-sm font-medium">Loading inventory...</p>
+                                </div>
+                            </div>
+                        ) : error ? (
+                            <div className="bg-red-50 border border-red-200 rounded-xl p-8 text-center max-w-md mx-auto my-12">
+                                <AlertTriangle className="mx-auto h-12 w-12 text-red-500 mb-4" />
+                                <h3 className="text-lg font-semibold text-red-700 mb-2">Failed to load data</h3>
+                                <p className="text-red-600 mb-6 text-sm">{error}</p>
+                                <Button onClick={() => window.location.reload()} className="bg-red-600 text-white">Retry</Button>
+                            </div>
+                        ) : (
+                            <>
+                                {/* LIST VIEW */}
+                                {viewMode === 'list' && (
+                                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col min-h-[500px]">
+                                        {medicines.length > 0 ? (
+                                            <>
+                                                <MedicineTable
+                                                    medicines={medicines}
+                                                    onRetail={(medicine) => console.log('Retail:', medicine)}
+                                                    onEdit={(medicine) => {
+                                                        setEditingProduct(medicine);
+                                                        setIsEditProductOpen(true);
+                                                    }}
+                                                    onDelete={handleDelete}
+                                                    onViewDetails={handleListMedicineView}
+                                                />
+                                                <div className="border-t border-slate-100 p-4 mt-auto bg-slate-50">
+                                                    <Pagination
+                                                        currentPage={currentPage}
+                                                        totalPages={totalPages}
+                                                        itemsPerPage={itemsPerPage}
+                                                        totalItems={totalItems}
+                                                        onPageChange={setCurrentPage}
+                                                    />
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center p-24 text-slate-400">
+                                                <LayoutGrid size={48} className="mb-4 opacity-20" />
+                                                <p className="text-lg font-medium text-slate-500">No products found</p>
+                                                <p className="text-sm">Try adjusting your filters</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* RACK VIEW */}
+                                {viewMode === 'rack' && (
+                                    <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                        {filteredRacks.length > 0 ? (
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                                {filteredRacks.map((category) => (
+                                                    <RackCard
+                                                        key={category.id}
+                                                        category={category}
+                                                        onClick={() => setSelectedCategory(category)}
+                                                    />
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center p-24 bg-white rounded-xl border border-slate-200 border-dashed text-slate-400">
+                                                <Package size={48} className="mb-4 opacity-30" />
+                                                <p className="text-lg font-medium text-slate-500">No racks found</p>
+                                                <p className="text-sm">Try adjusting your search terms</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
+                </div>
+
+                {/* Modals */}
+                <ProductFormModal
+                    isOpen={isAddProductOpen}
+                    onClose={() => setIsAddProductOpen(false)}
+                    onSuccess={handleAddSuccess}
+                />
+                <ProductFormModal
+                    isOpen={editingProduct !== null}
+                    onClose={() => setEditingProduct(null)}
+                    onSuccess={handleAddSuccess}
+                    item={editingProduct!}
+                />
+                {/* Rack Modals */}
+                <RackDetailModal
+                    category={selectedCategory}
+                    onClose={() => setSelectedCategory(null)}
+                    onMedicineClick={handleRackMedicineClick}
+                />
+                {selectedMedicine && (
+                    <MedicineDetailsModal
+                        medicine={selectedMedicine}
+                        onClose={() => setSelectedMedicine(null)}
+                        onEdit={(med) => {
+                            setSelectedMedicine(null);
+                            // Ensure type compatibility. The modal passes back MedicineData.
+                            // In this context, selectedMedicine is explicitly Medicine type, 
+                            // and Rack items are converted to Medicine type before checking selectedMedicine.
+                            setEditingProduct(med as Medicine);
+                            setIsEditProductOpen(true);
+                        }}
+                    />
+                )}
+                {isLegendOpen && (
+                    <KeyLegendModal
+                        onClose={() => setIsLegendOpen(false)}
+                    />
+                )}
+            </div>
+        </DashboardLayout>
+    );
+}
