@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Supplier } from '@/lib/types';
-import { FormModal } from '@/components/ui/FormModal'; // Assuming generic form modal exists
 import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button'; // Assuming ui components exist
-import { FormField } from '@/components/ui/FormField'; // If you have a wrapper like this
+import { Button } from '@/components/ui/Button';
+import CreatableSelect from 'react-select/creatable';
+import { supplierService } from '@/services/supplierService';
 
 interface AddSupplierModalProps {
     isOpen: boolean;
@@ -12,22 +12,42 @@ interface AddSupplierModalProps {
     createSupplier: (supplier: Partial<Supplier>) => Promise<Supplier>;
 }
 
+interface Option {
+    readonly label: string;
+    readonly value: string;
+}
+
 export const AddSupplierModal: React.FC<AddSupplierModalProps> = ({ isOpen, onClose, onSuccess, createSupplier }) => {
     const [loading, setLoading] = useState(false);
+    const [companies, setCompanies] = useState<Option[]>([]);
     const [formData, setFormData] = useState<Partial<Supplier>>({
         name: '',
         company: '',
         phone: '',
         email: '',
         address: '',
-        city: '',
-        state: '',
-        country: 'Bangladesh',
-        status: 'Active',
     });
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    useEffect(() => {
+        if (isOpen) {
+            const fetchCompanies = async () => {
+                try {
+                    const names = await supplierService.getCompanies();
+                    setCompanies(names.map(name => ({ label: name, value: name })));
+                } catch (error) {
+                    console.error('Failed to fetch companies', error);
+                }
+            };
+            fetchCompanies();
+        }
+    }, [isOpen]);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleCompanyChange = (newValue: any) => {
+        setFormData({ ...formData, company: newValue ? newValue.value : '' });
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -37,6 +57,14 @@ export const AddSupplierModal: React.FC<AddSupplierModalProps> = ({ isOpen, onCl
             const newSupplier = await createSupplier(formData);
             onSuccess(newSupplier);
             onClose();
+            // Reset form
+            setFormData({
+                name: '',
+                company: '',
+                phone: '',
+                email: '',
+                address: '',
+            });
         } catch (error) {
             console.error('Failed to create supplier', error);
         } finally {
@@ -44,8 +72,10 @@ export const AddSupplierModal: React.FC<AddSupplierModalProps> = ({ isOpen, onCl
         }
     };
 
+    if (!isOpen) return null;
+
     return (
-        <div className={`fixed inset-0 z-50 flex items-center justify-center ${isOpen ? 'block' : 'hidden'}`}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
             <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl z-10 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                 <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
@@ -61,7 +91,22 @@ export const AddSupplierModal: React.FC<AddSupplierModalProps> = ({ isOpen, onCl
                         </div>
                         <div className="space-y-1">
                             <label className="text-xs font-semibold text-slate-500">Company Name *</label>
-                            <Input name="company" required value={formData.company} onChange={handleChange} placeholder="e.g. Acme Pharma" />
+                            <CreatableSelect
+                                isClearable
+                                options={companies}
+                                onChange={handleCompanyChange}
+                                value={formData.company ? { label: formData.company, value: formData.company } : null}
+                                placeholder="Select or type..."
+                                className="text-sm"
+                                styles={{
+                                    control: (base) => ({
+                                        ...base,
+                                        height: '40px',
+                                        borderColor: '#e2e8f0',
+                                        '&:hover': { borderColor: '#cbd5e1' }
+                                    })
+                                }}
+                            />
                         </div>
                         <div className="space-y-1">
                             <label className="text-xs font-semibold text-slate-500">Phone Number *</label>
@@ -74,39 +119,6 @@ export const AddSupplierModal: React.FC<AddSupplierModalProps> = ({ isOpen, onCl
                         <div className="col-span-1 md:col-span-2 space-y-1">
                             <label className="text-xs font-semibold text-slate-500">Address</label>
                             <Input name="address" value={formData.address} onChange={handleChange} placeholder="Full address" />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-xs font-semibold text-slate-500">City</label>
-                            <Input name="city" value={formData.city} onChange={handleChange} />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-xs font-semibold text-slate-500">State/Division</label>
-                            <Input name="state" value={formData.state} onChange={handleChange} />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-xs font-semibold text-slate-500">Country</label>
-                            <select
-                                name="country"
-                                value={formData.country}
-                                onChange={handleChange}
-                                className="w-full h-10 px-3 rounded-md border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                            >
-                                <option value="Bangladesh">Bangladesh</option>
-                                <option value="India">India</option>
-                                <option value="USA">USA</option>
-                            </select>
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-xs font-semibold text-slate-500">Status</label>
-                            <select
-                                name="status"
-                                value={formData.status}
-                                onChange={handleChange}
-                                className="w-full h-10 px-3 rounded-md border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                            >
-                                <option value="Active">Active</option>
-                                <option value="Inactive">Inactive</option>
-                            </select>
                         </div>
                     </div>
 

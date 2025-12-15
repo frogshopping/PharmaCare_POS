@@ -1,35 +1,70 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Supplier } from '@/lib/types';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { supplierService } from '@/services/supplierService';
+import CreatableSelect from 'react-select/creatable';
 
 interface SupplierEditProps {
     supplier: Supplier;
 }
 
+interface Option {
+    readonly label: string;
+    readonly value: string;
+}
+
 export const SupplierEdit: React.FC<SupplierEditProps> = ({ supplier }) => {
-    const [formData, setFormData] = useState({
+    const [loading, setLoading] = useState(false);
+    const [companies, setCompanies] = useState<Option[]>([]);
+    const [formData, setFormData] = useState<Partial<Supplier>>({
         name: supplier.name,
         company: supplier.company,
         email: supplier.email || '',
         phone: supplier.phone,
-        nid: supplier.nid || '',
         address: supplier.address || '',
-        city: supplier.city || '',
-        state: supplier.state || '',
-        country: supplier.country || 'Bangladesh',
-        status: supplier.status,
     });
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    useEffect(() => {
+        const fetchCompanies = async () => {
+            try {
+                const names = await supplierService.getCompanies();
+                setCompanies(names.map(name => ({ label: name, value: name })));
+            } catch (error) {
+                console.error('Failed to fetch companies', error);
+            }
+        };
+        fetchCompanies();
+    }, []);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleCompanyChange = (newValue: any) => {
+        setFormData({ ...formData, company: newValue ? newValue.value : '' });
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            await supplierService.update(supplier.id, formData);
+            // Optionally show success message or refresh
+            alert('Supplier updated successfully');
+        } catch (error) {
+            console.error('Failed to update supplier', error);
+            alert('Failed to update supplier');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in duration-500 p-6">
             <h3 className="font-bold text-slate-800 mb-6 border-b border-slate-100 pb-2">Edit Supplier Details</h3>
 
-            <form className="space-y-4 max-w-4xl">
+            <form onSubmit={handleSubmit} className="space-y-4 max-w-4xl">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1">
                         <label className="text-xs font-semibold text-slate-500">Contact Person Name</label>
@@ -37,7 +72,22 @@ export const SupplierEdit: React.FC<SupplierEditProps> = ({ supplier }) => {
                     </div>
                     <div className="space-y-1">
                         <label className="text-xs font-semibold text-slate-500">Pharmaceutical Company</label>
-                        <Input name="company" value={formData.company} onChange={handleChange} />
+                        <CreatableSelect
+                            isClearable
+                            options={companies}
+                            onChange={handleCompanyChange}
+                            value={formData.company ? { label: formData.company, value: formData.company } : null}
+                            placeholder="Select or type..."
+                            className="text-sm"
+                            styles={{
+                                control: (base) => ({
+                                    ...base,
+                                    height: '40px',
+                                    borderColor: '#e2e8f0',
+                                    '&:hover': { borderColor: '#cbd5e1' }
+                                })
+                            }}
+                        />
                     </div>
                     <div className="space-y-1">
                         <label className="text-xs font-semibold text-slate-500">Email</label>
@@ -47,52 +97,16 @@ export const SupplierEdit: React.FC<SupplierEditProps> = ({ supplier }) => {
                         <label className="text-xs font-semibold text-slate-500">Phone</label>
                         <Input name="phone" value={formData.phone} onChange={handleChange} />
                     </div>
-                    <div className="space-y-1">
-                        <label className="text-xs font-semibold text-slate-500">National ID#</label>
-                        <Input name="nid" value={formData.nid} onChange={handleChange} />
-                    </div>
                     <div className="col-span-1 md:col-span-2 space-y-1">
                         <label className="text-xs font-semibold text-slate-500">Address</label>
                         <Input name="address" value={formData.address} onChange={handleChange} />
                     </div>
-                    <div className="space-y-1">
-                        <label className="text-xs font-semibold text-slate-500">City</label>
-                        <Input name="city" value={formData.city} onChange={handleChange} />
-                    </div>
-                    <div className="space-y-1">
-                        <label className="text-xs font-semibold text-slate-500">State</label>
-                        <Input name="state" value={formData.state} onChange={handleChange} />
-                    </div>
-                    <div className="space-y-1">
-                        <label className="text-xs font-semibold text-slate-500">Country</label>
-                        <select
-                            name="country"
-                            value={formData.country}
-                            onChange={handleChange}
-                            className="w-full h-10 px-3 rounded-md border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                        >
-                            <option value="Bangladesh">Bangladesh</option>
-                            <option value="India">India</option>
-                            <option value="USA">USA</option>
-                        </select>
-                    </div>
-                    <div className="space-y-1">
-                        <label className="text-xs font-semibold text-slate-500">Status</label>
-                        <select
-                            name="status"
-                            value={formData.status}
-                            onChange={handleChange}
-                            className="w-full h-10 px-3 rounded-md border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                        >
-                            <option value="Active">Active</option>
-                            <option value="Inactive">Inactive</option>
-                        </select>
-                    </div>
-                    {/* Password field was shown in image but optional/hidden for now as it's supplier management */}
                 </div>
 
                 <div className="pt-4">
-                    <Button className="bg-indigo-600 hover:bg-indigo-700 text-white w-32">Submit</Button>
+                    <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white w-32" disabled={loading}>
+                        {loading ? 'Saving...' : 'Save Changes'}
+                    </Button>
                 </div>
             </form>
         </div>

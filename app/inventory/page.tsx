@@ -130,54 +130,6 @@ export default function InventoryPage() {
         fetchData();
     }, [currentPage, statusFilter, debouncedSearchQuery]); // Re-fetch when these change
 
-    // === Derived Stats (Shared) ===
-    // This useMemo is no longer needed as stats are fetched directly
-    // const stats = useMemo(() => {
-    //     return {
-    //         total: medicines.length,
-    //         lowStock: medicines.filter(m => m.inStock > 0 && m.inStock < 20).length,
-    //         outOfStock: medicines.filter(m => m.inStock === 0).length,
-    //         goodStock: medicines.filter(m => m.inStock >= 20).length
-    //     };
-    // }, [medicines]);
-
-    // === Filtering Logic (List View) ===
-    // This is now handled by the API call in fetchData
-    // const filteredMedicines = useMemo(() => {
-    //     let filtered = [...medicines];
-
-    //     if (statusFilter === 'low') filtered = filtered.filter(m => m.inStock > 0 && m.inStock < 20);
-    //     else if (statusFilter === 'out') filtered = filtered.filter(m => m.inStock === 0);
-
-    //     if (searchQuery) {
-    //         const lowerQuery = searchQuery.toLowerCase();
-    //         filtered = filtered.filter(m =>
-    //             m.name.toLowerCase().includes(lowerQuery) ||
-    //             m.barcode.toLowerCase().includes(lowerQuery) ||
-    //             m.productCode.toLowerCase().includes(lowerQuery)
-    //         );
-    //     }
-
-    //     // Sorting for Top/Low Selling
-    //     if (statusFilter === 'top-selling') {
-    //         filtered.sort((a, b) => b.totalSold - a.totalSold);
-    //     } else if (statusFilter === 'low-selling') {
-    //         filtered.sort((a, b) => a.totalSold - b.totalSold);
-    //     }
-
-    //     return filtered;
-    // }, [medicines, statusFilter, searchQuery]);
-
-    // === Pagination (List View) ===
-    // This is now handled by the API call in fetchData
-    // const paginatedMedicines = useMemo(() => {
-    //     const startIndex = (currentPage - 1) * itemsPerPage;
-    //     return filteredMedicines.slice(startIndex, startIndex + itemsPerPage);
-    // }, [filteredMedicines, currentPage]);
-    // const totalPages = Math.ceil(filteredMedicines.length / itemsPerPage);
-    // useEffect(() => setCurrentPage(1), [statusFilter, searchQuery, viewMode]);
-
-
     // === Filtering Logic (Rack View Only) ===
     // List view filtering is now Server-Side
     const filteredRacks = useMemo(() => {

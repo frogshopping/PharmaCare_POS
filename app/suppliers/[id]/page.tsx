@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { medicineService } from '@/services/medicineService';
+import { supplierService } from '@/services/supplierService';
 import { Supplier } from '@/lib/types';
 import { Button } from '@/components/ui/Button';
 import {
@@ -32,7 +32,7 @@ export default function SupplierDetailsPage() {
     useEffect(() => {
         const fetchSupplier = async () => {
             if (params.id) {
-                const data = await medicineService.getSupplierById(params.id as string);
+                const data = await supplierService.getById(params.id as string);
                 setSupplier(data);
                 setLoading(false);
             }

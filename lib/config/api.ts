@@ -40,4 +40,9 @@ export const API_ENDPOINTS = {
     // Reports
     REPORTS_PROFIT: '/reports/profit',
     REPORTS_SALES: '/reports/sales',
+
+    // Suppliers
+    SUPPLIERS: '/suppliers',
+    SUPPLIER_BY_ID: (id: string | number) => `/suppliers/${id}`,
+    PHARMACEUTICAL_COMPANIES: '/suppliers/companies',
 } as const;

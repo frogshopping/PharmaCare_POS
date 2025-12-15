@@ -247,8 +247,8 @@ export interface Supplier {
     city?: string;
     state?: string;
     country?: string;
-    status: 'Active' | 'Inactive';
-    purchaseInvoiceCount: number;
+    status?: 'Active' | 'Inactive'; // Made optional
+    purchaseInvoiceCount?: number; // Made optional
 }
 
 // ============================================
