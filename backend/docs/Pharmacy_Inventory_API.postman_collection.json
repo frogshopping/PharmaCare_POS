@@ -1,0 +1,423 @@
+{
+    "info": {
+        "_postman_id": "pharmacy-inventory-api",
+        "name": "Pharmacy Inventory API",
+        "description": "API collection for Pharmacy Management System",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Health Check",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/api/health",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "api",
+                        "health"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "Inventory",
+            "item": [
+                {
+                    "name": "Get All Medicines",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/inventory/medicines?page=1&limit=20&search=&status=&rack=&sort=",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "inventory",
+                                "medicines"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1",
+                                    "description": "Page number"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "20",
+                                    "description": "Items per page"
+                                },
+                                {
+                                    "key": "search",
+                                    "value": "",
+                                    "description": "Search by name, code, or generic name"
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "",
+                                    "description": "Filter by status: low, out, Active, Inactive"
+                                },
+                                {
+                                    "key": "rack",
+                                    "value": "",
+                                    "description": "Filter by rack"
+                                },
+                                {
+                                    "key": "sort",
+                                    "value": "",
+                                    "description": "Sort: sales_desc, sales_asc, price_desc, price_asc, name_asc, name_desc, date_asc, date_desc"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Medicine By ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/inventory/medicines/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "inventory",
+                                "medicines",
+                                "1"
+                            ]
+                        },
+                        "description": "Get detailed information about a specific medicine by its ID"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Medicine",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Paracetamol Tablet\",\n  \"description\": \"Pain reliever and fever reducer\",\n  \"strength\": \"500mg\",\n  \"genericName\": \"Paracetamol\",\n  \"manufacture\": \"Square Pharmaceuticals\",\n  \"supplier\": \"ABC Pharmaceuticals Ltd\",\n  \"supplierContact\": \"+880-1234-567890\",\n  \"rackNo\": \"A1\",\n  \"rackLocation\": \"Floor 1, Section A\",\n  \"inStock\": 1000,\n  \"price\": 2.50,\n  \"mrp\": 3.00,\n  \"discount\": 5.0,\n  \"buyingPrice\": 2.00,\n  \"type\": \"Medicine\",\n  \"category\": \"Tablet\",\n  \"packSize\": {\n    \"strip\": 10,\n    \"box\": 100\n  },\n  \"packPrice\": {\n    \"strip\": 25.00,\n    \"box\": 250.00\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/inventory/medicines",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "inventory",
+                                "medicines"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Medicine",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"price\": 2.75,\n  \"inStock\": 950,\n  \"discount\": 10.0\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/inventory/medicines/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "inventory",
+                                "medicines",
+                                "1"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Medicine",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/inventory/medicines/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "inventory",
+                                "medicines",
+                                "1"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Racks",
+            "item": [
+                {
+                    "name": "Get All Racks",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/inventory/racks",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "inventory",
+                                "racks"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Rack Medicines",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/inventory/racks/medicines",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "inventory",
+                                "racks",
+                                "medicines"
+                            ]
+                        },
+                        "description": "Get all racks with their associated medicines. Returns simplified medicine info: id, code, name, generic name, strength, price, stock"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Rack",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"A1\",\n  \"location\": \"Floor 1, Section A\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/inventory/racks",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "inventory",
+                                "racks"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Customers",
+            "item": [
+                {
+                    "name": "Get All Customers",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/customers?page=1&limit=20&search=",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "customers"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1",
+                                    "description": "Page number"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "20",
+                                    "description": "Items per page"
+                                },
+                                {
+                                    "key": "search",
+                                    "value": "",
+                                    "description": "Search by name, phone, or email"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Customer",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Robert Brown\",\n  \"phone\": \"+1 555-0125\",\n  \"email\": \"robert.b@example.com\",\n  \"address\": \"789 Pine Ln, Chicago, IL\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/customers",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "customers"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Customer",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Robert Brown\",\n  \"phone\": \"+1 555-9999\",\n  \"email\": \"robert.new@example.com\",\n  \"address\": \"101 New Rd, Chicago, IL\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/customers/3",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "customers",
+                                "3"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Customer",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/customers/3",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "customers",
+                                "3"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Generics",
+            "item": [
+                {
+                    "name": "Get All Generics",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/inventory/generics",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "inventory",
+                                "generics"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Vendors",
+            "item": [
+                {
+                    "name": "Get All Vendors",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/vendors",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "vendors"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:8080",
+            "type": "string"
+        }
+    ]
+}
